@@ -3,202 +3,992 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI v7.1</title>
+<title>Travel Hacker AI — Поиск авиабилетов</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #2c3e50; }
-  .container { max-width: 1000px; margin: 0 auto; }
-  .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
-  h1 { color: #667eea; font-size: 24px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-  .badge { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #2c3e50;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+  h1 {
+    color: #667eea;
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 16px; }
+  .badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
   .form-group { display: flex; flex-direction: column; }
-  .form-group label { font-size: 12px; font-weight: 600; color: #7f8c8d; margin-bottom: 6px; text-transform: uppercase; }
-  .form-group input, .form-group select { padding: 10px; border: 2px solid #e0e6ed; border-radius: 8px; font-size: 14px; }
-  .form-group input:focus { outline: none; border-color: #667eea; }
-  
-  .passengers-block { background: #f5f7fa; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 2px solid #e0e6ed; }
-  .passenger-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #d0d7e2; }
-  .passenger-row:last-child { border-bottom: none; }
-  .counter { display: flex; align-items: center; gap: 8px; background: white; border-radius: 20px; padding: 4px; border: 2px solid #e0e6ed; }
-  .counter button { width: 28px; height: 28px; border: none; border-radius: 50%; background: #667eea; color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
-  .counter button:disabled { background: #d0d7e2; cursor: not-allowed; }
-  .counter .value { min-width: 24px; text-align: center; font-weight: 700; }
-  
-  .airports-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 6px; }
-  .airport-chip { display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: #f5f7fa; border: 2px solid #e0e6ed; border-radius: 16px; font-size: 11px; cursor: pointer; user-select: none; }
-  .airport-chip.active { background: #667eea; color: white; border-color: #667eea; }
-  .airport-chip input { display: none; }
-  
-  .btn-search { width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
-  .btn-search:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group input, .form-group select {
+    padding: 10px 12px;
+    border: 2px solid #e0e6ed;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+  }
 
-  /* СТРОГО СПИСКИ, БЕЗ ТАБЛИЦ (Правило 0.1) */
-  .results-list { display: flex; flex-direction: column; gap: 12px; }
-  .result-item { background: #fafbfc; border-left: 4px solid #667eea; border-radius: 8px; padding: 16px; transition: transform 0.2s; }
-  .result-item:hover { transform: translateX(4px); background: #f0f4ff; }
-  .result-item.urgent { border-left-color: #f44336; background: #fff5f5; }
-  .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
-  .route-name { font-weight: 700; font-size: 16px; color: #2c3e50; }
-  .price-tag { font-weight: 700; font-size: 18px; color: #27ae60; }
-  .result-details { font-size: 13px; color: #555; line-height: 1.6; }
-  .result-details strong { color: #2c3e50; }
-  .warning-badge { display: inline-block; background: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 4px; }
-  .hack-tag { display: inline-block; background: #e3f2fd; color: #1565c0; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-right: 4px; }
-  
-  .summary-block { background: linear-gradient(135deg, #fff9c4 0%, #fff3e0 100%); border-radius: 12px; padding: 16px; border-left: 4px solid #fbc02d; margin-top: 20px; }
-  .summary-block h3 { font-size: 14px; margin-bottom: 8px; color: #5d4037; }
-  .summary-block p { font-size: 13px; color: #5d4037; margin-bottom: 8px; line-height: 1.5; }
-  
-  .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
-  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+  /* Пассажиры */
+  .passengers-block {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+    border: 2px solid #e0e6ed;
+  }
+  .passengers-block > label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .passenger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #d0d7e2;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .passenger-row:last-of-type { border-bottom: none; }
+  .passenger-info { display: flex; flex-direction: column; gap: 2px; }
+  .passenger-info .title { font-weight: 600; color: #2c3e50; font-size: 14px; }
+  .passenger-info .hint { font-size: 11px; color: #7f8c8d; }
+  .counter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border-radius: 20px;
+    padding: 4px;
+    border: 2px solid #e0e6ed;
+  }
+  .counter button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .counter button:hover:not(:disabled) { background: #764ba2; }
+  .counter button:disabled { background: #d0d7e2; cursor: not-allowed; }
+  .counter .value { min-width: 24px; text-align: center; font-weight: 700; font-size: 16px; }
+  .age-select {
+    margin-left: 12px;
+    padding: 4px 8px;
+    border: 1px solid #d0d7e2;
+    border-radius: 6px;
+    font-size: 12px;
+    background: white;
+  }
+  .passengers-summary {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #555;
+    border-left: 4px solid #667eea;
+  }
+  .passengers-summary strong { color: #667eea; }
+  .passengers-summary .tariff-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #7f8c8d;
+  }
+
+  /* Аэропорты */
+  .airports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .airport-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #f5f7fa;
+    border: 2px solid #e0e6ed;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  .airport-chip:hover { border-color: #667eea; }
+  .airport-chip.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+  .airport-chip input { display: none; }
+  .airport-chip .drive-time { font-size: 10px; opacity: 0.8; margin-left: auto; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f5f7fa;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+  .btn-search {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  /* Результаты */
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .results-header h2 { color: #2c3e50; font-size: 20px; }
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  .stat {
+    background: #f5f7fa;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .stat strong { color: #667eea; font-size: 16px; }
+  .export-buttons { display: flex; gap: 8px; }
+  .btn-export {
+    padding: 8px 14px;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-export:hover { background: #667eea; color: white; }
+
+  /* Карточки результатов (вместо таблиц) */
+  .results-list { display: flex; flex-direction: column; gap: 14px; }
+  .flight-card {
+    background: #fafbfc;
+    border-left: 4px solid #667eea;
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.2s;
+  }
+  .flight-card:hover { transform: translateX(4px); background: #f0f4ff; }
+  .flight-card.urgent { border-left-color: #f44336; background: #fff5f5; }
+  .flight-card.balance { border-left-color: #2e7d32; background: #f1f8e9; }
+  .flight-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .flight-route {
+    font-weight: 700;
+    font-size: 17px;
+    color: #2c3e50;
+  }
+  .flight-price {
+    font-weight: 700;
+    font-size: 20px;
+    color: #27ae60;
+  }
+  .flight-details {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.7;
+  }
+  .flight-details strong { color: #2c3e50; }
+  .warning-badge {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e65100;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .hack-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .hack-mistake { background: #ffebee; color: #c62828; }
+  .hack-split { background: #fff3e0; color: #e65100; }
+  .hack-lowcost { background: #e3f2fd; color: #1565c0; }
+  .visa-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+
+  /* ===== ПРОГНОЗ ЦЕН ===== */
+  .forecast-card h2 {
+    color: #2c3e50;
+    font-size: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .forecast-item {
+    border-radius: 12px;
+    padding: 16px;
+    border: 2px solid;
+    position: relative;
+  }
+  .forecast-buy { background: #e8f5e9; border-color: #4caf50; }
+  .forecast-wait { background: #fff3e0; border-color: #ff9800; }
+  .forecast-soon { background: #fff8e1; border-color: #ffc107; }
+  .forecast-urgent { background: #ffebee; border-color: #f44336; }
+  .forecast-item .route-label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 8px;
+  }
+  .forecast-verdict {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .forecast-verdict .emoji { font-size: 22px; }
+  .forecast-confidence {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.7);
+  }
+  .forecast-reason {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .forecast-chart {
+    background: white;
+    border-radius: 8px;
+    padding: 8px;
+    height: 80px;
+    position: relative;
+    margin-top: 8px;
+  }
+  .forecast-chart svg { width: 100%; height: 100%; }
+  .forecast-chart .chart-label {
+    position: absolute;
+    bottom: 2px;
+    font-size: 9px;
+    color: #999;
+  }
+  .forecast-chart .label-left { left: 4px; }
+  .forecast-chart .label-right { right: 4px; }
+  .forecast-chart .label-now { left: 50%; transform: translateX(-50%); color: #667eea; font-weight: 600; }
+
+  .forecast-tips {
+    background: linear-gradient(135deg, #fff9c4 0%, #fff3e0 100%);
+    border-radius: 12px;
+    padding: 16px;
+    border-left: 4px solid #fbc02d;
+  }
+  .forecast-tips h3 { font-size: 14px; margin-bottom: 10px; color: #5d4037; }
+  .forecast-tips ul { list-style: none; padding: 0; }
+  .forecast-tips li {
+    padding: 6px 0;
+    font-size: 13px;
+    color: #5d4037;
+    border-bottom: 1px dashed #ffe082;
+    display: flex;
+    gap: 8px;
+  }
+  .forecast-tips li:last-child { border-bottom: none; }
+
+  /* ===== ИТОГОВЫЕ РЕКОМЕНДАЦИИ (РАЗНЫЕ ЦВЕТА) ===== */
+  .summary-card h2 {
+    color: #2c3e50;
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+  .summary-item {
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border-left: 4px solid;
+  }
+  .summary-cheapest { background: #e8f5e9; border-color: #2e7d32; }
+  .summary-balance { background: #e3f2fd; border-color: #1565c0; }
+  .summary-hack { background: #fff3e0; border-color: #e65100; }
+  .summary-item h3 { font-size: 14px; margin-bottom: 4px; }
+  .summary-item p { font-size: 13px; color: #555; line-height: 1.5; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: #95a5a6; }
+  .empty-state .icon { font-size: 60px; margin-bottom: 16px; }
+
+  .preferences-note {
+    background: #fff9c4;
+    border-left: 4px solid #fbc02d;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    color: #5d4037;
+  }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
+
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v7.1 Strict Mode</span></h1>
-    <p style="color:#7f8c8d; font-size:14px; margin-bottom:16px;">Абсолютный приоритет цены. Радиус 5ч от Туна. Строго списки, без таблиц.</p>
-    
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.0</span></h1>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Прогноз цен</div>
+
+    <div class="preferences-note">
+      💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
+    </div>
+
     <div class="form-grid">
-      <div class="form-group"><label>🛬 Куда</label><input type="text" id="destination" placeholder="Напр: Тенерифе"></div>
-      <div class="form-group"><label>📅 Дата вылета</label><input type="date" id="dateOut"></div>
-      <div class="form-group"><label>📅 Дата возврата</label><input type="date" id="dateBack"></div>
+      <div class="form-group">
+        <label>🛬 Куда</label>
+        <input type="text" id="destination" placeholder="Например: Тенерифе, Пальма-де-Майорка...">
+      </div>
+      <div class="form-group">
+        <label>📅 Дата вылета</label>
+        <input type="date" id="dateOut">
+      </div>
+      <div class="form-group">
+        <label>📅 Дата возврата</label>
+        <input type="date" id="dateBack">
+      </div>
+      <div class="form-group">
+        <label>🧳 Регистрируемый багаж (23 кг)</label>
+        <select id="baggage">
+          <option value="0">Без багажа (только ручная кладь)</option>
+          <option value="1">1 место</option>
+          <option value="2">2 места</option>
+          <option value="3">3 места</option>
+          <option value="4" selected>4 места (на каждого)</option>
+        </select>
+      </div>
     </div>
 
+    <!-- ПАССАЖИРЫ -->
     <div class="passengers-block">
-      <label style="font-size:12px; font-weight:600; color:#7f8c8d; display:block; margin-bottom:8px;">👥 ПАССАЖИРЫ (По умолчанию: 4 чел.)</label>
+      <label>👥 Пассажиры</label>
       <div class="passenger-row">
-        <span>👨 Взрослые и подростки (16+ лет)</span>
-        <div class="counter"><button onclick="chg('adults',-1)">−</button><span class="value" id="adultsValue">3</span><button onclick="chg('adults',1)">+</button></div>
+        <div class="passenger-info">
+          <span class="title">👨 Взрослые</span>
+          <span class="hint">16 лет и старше (тариф взрослого)</span>
+        </div>
+        <div class="counter">
+          <button onclick="changeCount('adults', -1)">−</button>
+          <span class="value" id="adultsValue">2</span>
+          <button onclick="changeCount('adults', 1)">+</button>
+        </div>
       </div>
       <div class="passenger-row">
-        <span>🧒 Дети (2–15 лет)</span>
-        <div class="counter"><button onclick="chg('children',-1)">−</button><span class="value" id="childrenValue">1</span><button onclick="chg('children',1)">+</button></div>
+        <div class="passenger-info">
+          <span class="title">🧒 Дети</span>
+          <span class="hint">2–15 лет (детский тариф, обычно −25–40%)</span>
+        </div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap;">
+          <div class="counter">
+            <button onclick="changeCount('children', -1)">−</button>
+            <span class="value" id="childrenValue">1</span>
+            <button onclick="changeCount('children', 1)">+</button>
+          </div>
+          <select class="age-select" id="childAge" onchange="updateSummary()">
+            <option value="2">2 года</option><option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option><option value="7">7</option>
+            <option value="8">8</option><option value="9" selected>9 лет</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+          </select>
+        </div>
       </div>
       <div class="passenger-row">
-        <span>👶 Младенцы (0–2 года)</span>
-        <div class="counter"><button onclick="chg('infants',-1)">−</button><span class="value" id="infantsValue">0</span><button onclick="chg('infants',1)">+</button></div>
+        <div class="passenger-info">
+          <span class="title">👶 Младенцы</span>
+          <span class="hint">0–2 года (на руках, ~10% от тарифа)</span>
+        </div>
+        <div class="counter">
+          <button onclick="changeCount('infants', -1)">−</button>
+          <span class="value" id="infantsValue">0</span>
+          <button onclick="changeCount('infants', 1)">+</button>
+        </div>
       </div>
-      <div style="margin-top:10px; font-size:12px; color:#555; background:white; padding:8px; border-radius:6px;">
-        💡 <strong>Итого:</strong> <span id="paxSummary">4 пассажира</span>. <br>
-        ⚠️ <strong>Багаж по умолчанию НЕ включен</strong> (только ручная кладь под сиденье).
-      </div>
+      <div class="passengers-summary" id="passengersSummary">—</div>
     </div>
 
-    <div class="form-group" style="margin-bottom:16px;">
-      <label>🛫 Аэропорты вылета (до 5ч из Туна)</label>
+    <!-- АЭРОПОРТЫ -->
+    <div class="form-group" style="margin-bottom: 16px;">
+      <label>🛫 Аэропорты вылета (в радиусе 5 часов от Туна)</label>
       <div class="airports-grid" id="airportsGrid">
-        <label class="airport-chip active"><input type="checkbox" value="ZRH" checked> ZRH (1ч 15м)</label>
-        <label class="airport-chip active"><input type="checkbox" value="BSL" checked> BSL (1ч 15м)</label>
-        <label class="airport-chip"><input type="checkbox" value="GVA"> GVA (2ч 30м)</label>
-        <label class="airport-chip active"><input type="checkbox" value="MXP" checked> MXP (3ч)</label>
-        <label class="airport-chip active"><input type="checkbox" value="BGY" checked> BGY (3ч 30м)</label>
-        <label class="airport-chip"><input type="checkbox" value="STR"> STR (2ч 30м)</label>
-        <label class="airport-chip"><input type="checkbox" value="FKB"> FKB (2ч)</label>
-        <label class="airport-chip"><input type="checkbox" value="FMM"> FMM (3ч 30м)</label>
-        <label class="airport-chip"><input type="checkbox" value="MUC"> MUC (4ч)</label>
-        <label class="airport-chip"><input type="checkbox" value="SXB"> SXB (2ч 30м)</label>
+        <label class="airport-chip active"><input type="checkbox" value="ZRH" checked> Цюрих <span class="drive-time">1ч 15мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="BSL" checked> Базель <span class="drive-time">1ч 15мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="GVA"> Женева <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="FDH"> Фридрихсхафен <span class="drive-time">1ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="FKB"> Карлсруэ <span class="drive-time">2ч</span></label>
+        <label class="airport-chip"><input type="checkbox" value="SXB"> Страсбург <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="STR"> Штутгарт <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="MXP" checked> Милан Мальпенса <span class="drive-time">3ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="BGY" checked> Милан Бергамо <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="FMM"> Мемминген <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="LYS"> Лион <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="INN"> Инсбрук <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="NUE"> Нюрнберг <span class="drive-time">4ч</span></label>
+        <label class="airport-chip"><input type="checkbox" value="MUC"> Мюнхен <span class="drive-time">4ч</span></label>
+        <label class="airport-chip"><input type="checkbox" value="BLQ"> Болонья <span class="drive-time">4ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="FRA"> Франкфурт <span class="drive-time">4ч 30мин</span></label>
+        <label class="airport-chip"><input type="checkbox" value="VCE"> Венеция <span class="drive-time">5ч</span></label>
+        <label class="airport-chip"><input type="checkbox" value="NCE"> Ницца <span class="drive-time">5ч</span></label>
       </div>
     </div>
 
-    <button class="btn-search" onclick="search()">🔍 Найти лучшие предложения (v7.1)</button>
+    <div class="form-grid">
+      <label class="checkbox-row"><input type="checkbox" id="flexDates" checked><span>📆 Гибкость дат ±3 дня</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="selfTransfer" checked><span>🔀 Разрешить self-transfer</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="mistakeFares" checked><span>🔥 Искать ошибочные тарифы</span></label>
+    </div>
+
+    <button class="btn-search" onclick="searchFlights()">🔍 Найти лучшие предложения + прогноз цен</button>
   </div>
 
-  <div class="card" id="resultsCard" style="display:none;">
-    <h2 style="font-size:18px; margin-bottom:16px;">📋 Результаты поиска (отсортировано по цене)</h2>
-    <div class="results-list" id="resultsList"></div>
-    
-    <div class="summary-block">
-      <h3>💡 ИТОГОВОЕ РЕЗЮМЕ</h3>
-      <p>💰 <strong>АБСОЛЮТНО САМЫЙ ДЕШЕВЫЙ:</strong> <span id="sumCheap">—</span><br>
-      <em>Причина: Минимальная возможная цена, даже с компромиссами по времени или self-transfer.</em></p>
-      
-      <p>🏆 <strong>ЛУЧШИЙ БАЛАНС (ЦЕНА/РИСК):</strong> <span id="sumBalance">—</span><br>
-      <em>Причина: Немного дороже, но без рисков self-transfer и с удобной парковкой.</em></p>
-      
-      <p>💡 <strong>СОВЕТ ХАКЕРА:</strong> Wizz Air из Карлсруэ (FKB) или Меммингена (FMM) часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Забронируйте её онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже.</p>
-      
-      <p style="font-size:11px; color:#888; margin-top:12px; border-top: 1px solid #ffe082; padding-top: 8px;">
-        📅 <strong>ДАТА ПРОВЕРКИ ЦЕН:</strong> <span id="checkDate"></span><br>
-        ⚠️ Информация о визах, правилах авиакомпаний и рейсах может меняться со временем. Всегда перепроверяйте актуальные данные на официальных сайтах перед бронированием.
-      </p>
+  <!-- ПРОГНОЗ ЦЕН -->
+  <div class="card" id="forecastCard" style="display:none;">
+    <h2>💡 Прогноз цен — покупать сейчас или подождать?</h2>
+    <div class="forecast-grid" id="forecastGrid"></div>
+    <div class="forecast-tips">
+      <h3>📚 Общие правила покупки авиабилетов</h3>
+      <ul>
+        <li><span>🎯</span><span><strong>Золотое окно:</strong> для Европы лучшие цены за 6–8 недель до вылета.</span></li>
+        <li><span>📅</span><span><strong>День недели:</strong> вылеты во вторник и среду обычно дешевле.</span></li>
+        <li><span>⏰</span><span><strong>Время покупки:</strong> вторники и среды в 14:00–16:00 — авиакомпании обновляют тарифы.</span></li>
+        <li><span>🚫</span><span><strong>Избегайте:</strong> покупки менее чем за 14 дней до вылета — цены взлетают на 30-80%.</span></li>
+        <li><span>🔔</span><span><strong>Price Alert:</strong> настройте уведомления в Google Flights / Skyscanner.</span></li>
+        <li><span>🕵️</span><span><strong>Инкогнито-режим:</strong> ищите билеты в приватном окне браузера.</span></li>
+      </ul>
     </div>
   </div>
+
+  <!-- РЕЗУЛЬТАТЫ -->
+  <div class="card">
+    <div class="results-header">
+      <h2>📋 Результаты поиска</h2>
+      <div class="stats">
+        <div class="stat">Найдено рейсов: <strong id="flightsCount">0</strong></div>
+        <div class="stat">Лучшая цена: <strong id="bestPrice">0 CHF</strong></div>
+        <div class="stat">Средняя цена: <strong id="avgPrice">0 CHF</strong></div>
+      </div>
+      <div class="export-buttons">
+        <button class="btn-export" onclick="exportCSV()">📥 CSV</button>
+      </div>
+    </div>
+    <div class="results-list" id="resultsList">
+      <div class="empty-state">
+        <div class="icon">🔍</div>
+        <div>Укажите направление, даты и пассажиров, затем нажмите «Найти лучшие предложения»</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ИТОГОВЫЕ РЕКОМЕНДАЦИИ -->
+  <div class="card" id="summaryCard" style="display:none;">
+    <h2>💡 Итоговые рекомендации</h2>
+    <div class="summary-item summary-cheapest">
+      <h3>💰 АБСОЛЮТНО САМЫЙ ДЕШЁВЫЙ</h3>
+      <p id="summaryCheapest">—</p>
+    </div>
+    <div class="summary-item summary-balance">
+      <h3>🏆 ЛУЧШИЙ БАЛАНС (ЦЕНА/РИСК)</h3>
+      <p id="summaryBalance">—</p>
+    </div>
+    <div class="summary-item summary-hack">
+      <h3>💡 СОВЕТ ХАКЕРА</h3>
+      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже.</p>
+    </div>
+    <p style="font-size:11px; color:#888; margin-top:12px; border-top:1px solid #eee; padding-top:8px;">
+      📅 <strong>ДАТА ПРОВЕРКИ ЦЕН:</strong> <span id="checkDate"></span><br>
+      ⚠️ Информация о визах, правилах авиакомпаний и рейсах может меняться со временем. Всегда перепроверяйте актуальные данные на официальных сайтах перед бронированием.
+    </p>
+  </div>
+
 </div>
 
 <script>
-  let pax = { adults: 3, children: 1, infants: 0 }; // 2 взр + 1 подр 16 лет = 3 взрослых
-  
-  function chg(type, d) {
-    const limits = { adults: [1, 9], children: [0, 9], infants: [0, 6] };
-    let nv = pax[type] + d;
-    if (nv < limits[type][0] || nv > limits[type][1]) return;
-    if (type === 'infants' && nv > pax.adults) { alert('Младенцев не может быть больше взрослых'); return; }
-    pax[type] = nv;
-    document.getElementById(type + 'Value').textContent = nv;
-    document.getElementById('paxSummary').textContent = (pax.adults + pax.children + pax.infants) + ' пассажиров';
+  const STORAGE_KEY = 'travelHackerPrefs_v8';
+  let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
+
+  // Полные названия аэропортов и городов
+  const airportNames = {
+    ZRH: 'Цюрих', BSL: 'Базель', GVA: 'Женева', FDH: 'Фридрихсхафен',
+    FKB: 'Карлсруэ', SXB: 'Страсбург', STR: 'Штутгарт',
+    MXP: 'Милан Мальпенса', BGY: 'Милан Бергамо', FMM: 'Мемминген',
+    LYS: 'Лион', INN: 'Инсбрук', NUE: 'Нюрнберг', MUC: 'Мюнхен',
+    BLQ: 'Болонья', FRA: 'Франкфурт', VCE: 'Венеция', NCE: 'Ницца'
+  };
+  const destNames = {
+    TFS: 'Тенерифе Южный', PMI: 'Пальма-де-Майорка', MAD: 'Мадрид',
+    BCN: 'Барселона', ALC: 'Аликанте', AGP: 'Малага',
+    IST: 'Стамбул', SAW: 'Стамбул Сабиха', AYT: 'Анталья'
+  };
+
+  const airportMeta = {
+    ZRH: { parking: '~180 CHF/нед', drive: '~1ч 15мин' },
+    BSL: { parking: '~110 CHF/нед', drive: '~1ч 15мин' },
+    GVA: { parking: '~130 CHF/нед', drive: '~2ч 30мин' },
+    FDH: { parking: '~50 CHF/нед', drive: '~1ч 30мин' },
+    FKB: { parking: '~70 CHF/нед', drive: '~2ч' },
+    SXB: { parking: '~60 CHF/нед', drive: '~2ч 30мин' },
+    STR: { parking: '~80 CHF/нед', drive: '~2ч 30мин' },
+    MXP: { parking: '~70 CHF/нед', drive: '~3ч' },
+    BGY: { parking: '~65 CHF/нед', drive: '~3ч 30мин' },
+    FMM: { parking: '~60 CHF/нед', drive: '~3ч 30мин' },
+    LYS: { parking: '~85 CHF/нед', drive: '~3ч 30мин' },
+    INN: { parking: '~90 CHF/нед', drive: '~3ч 30мин' },
+    NUE: { parking: '~75 CHF/нед', drive: '~4ч' },
+    MUC: { parking: '~90 CHF/нед', drive: '~4ч' },
+    BLQ: { parking: '~75 CHF/нед', drive: '~4ч 30мин' },
+    FRA: { parking: '~100 CHF/нед', drive: '~4ч 30мин' },
+    VCE: { parking: '~80 CHF/нед', drive: '~5ч' },
+    NCE: { parking: '~85 CHF/нед', drive: '~5ч' }
+  };
+
+  function changeCount(type, delta) {
+    const limits = { adults: { min: 1, max: 9 }, children: { min: 0, max: 9 }, infants: { min: 0, max: 6 } };
+    const newVal = passengers[type] + delta;
+    if (newVal < limits[type].min || newVal > limits[type].max) return;
+    if (type === 'infants' && newVal > passengers.adults) {
+      alert('⚠️ Количество младенцев не может превышать количество взрослых');
+      return;
+    }
+    passengers[type] = newVal;
+    document.getElementById(type + 'Value').textContent = newVal;
+    updateSummary();
+    savePreferences();
   }
 
-  document.querySelectorAll('.airport-chip').forEach(c => {
-    c.addEventListener('click', e => {
-      if (e.target.tagName !== 'INPUT') { const i = c.querySelector('input'); i.checked = !i.checked; }
-      c.classList.toggle('active', c.querySelector('input').checked);
+  function updateSummary() {
+    passengers.childAge = parseInt(document.getElementById('childAge').value);
+    const total = passengers.adults + passengers.children + passengers.infants;
+    const plural = total === 1 ? '' : total < 5 ? 'а' : 'ов';
+    document.getElementById('passengersSummary').innerHTML = `
+      Итого: <strong>${total} пассажир${plural}</strong>
+      (${passengers.adults} взр. + ${passengers.children} реб. + ${passengers.infants} млад.)
+      <span class="tariff-hint">💡 ${passengers.childAge >= 16 ? 'Все дети 16+ лет — тариф взрослого.' : `Дети возрастом ${passengers.childAge} лет — детский тариф (~70%).`} Младенцы без места — ~10% от тарифа.</span>
+    `;
+  }
+
+  function savePreferences() {
+    const prefs = {
+      destination: document.getElementById('destination').value,
+      dateOut: document.getElementById('dateOut').value,
+      dateBack: document.getElementById('dateBack').value,
+      baggage: document.getElementById('baggage').value,
+      flexDates: document.getElementById('flexDates').checked,
+      selfTransfer: document.getElementById('selfTransfer').checked,
+      mistakeFares: document.getElementById('mistakeFares').checked,
+      airports: Array.from(document.querySelectorAll('#airportsGrid input:checked')).map(i => i.value),
+      passengers: passengers
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  }
+
+  function loadPreferences() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) { updateSummary(); return; }
+    try {
+      const prefs = JSON.parse(saved);
+      if (prefs.destination) document.getElementById('destination').value = prefs.destination;
+      if (prefs.dateOut) document.getElementById('dateOut').value = prefs.dateOut;
+      if (prefs.dateBack) document.getElementById('dateBack').value = prefs.dateBack;
+      if (prefs.baggage) document.getElementById('baggage').value = prefs.baggage;
+      document.getElementById('flexDates').checked = prefs.flexDates !== false;
+      document.getElementById('selfTransfer').checked = prefs.selfTransfer !== false;
+      document.getElementById('mistakeFares').checked = prefs.mistakeFares !== false;
+      if (prefs.airports?.length) {
+        document.querySelectorAll('#airportsGrid input').forEach(i => {
+          i.checked = prefs.airports.includes(i.value);
+          i.parentElement.classList.toggle('active', i.checked);
+        });
+      }
+      if (prefs.passengers) {
+        passengers = { ...passengers, ...prefs.passengers };
+        document.getElementById('adultsValue').textContent = passengers.adults;
+        document.getElementById('childrenValue').textContent = passengers.children;
+        document.getElementById('infantsValue').textContent = passengers.infants;
+        document.getElementById('childAge').value = passengers.childAge;
+      }
+      updateSummary();
+    } catch(e) { updateSummary(); }
+  }
+
+  function calculateTotalPrice(pricePerAdult) {
+    const childRatio = (passengers.childAge >= 16) ? 1.0 : 0.7;
+    const infantRatio = 0.1;
+    return Math.round(
+      passengers.adults * pricePerAdult +
+      passengers.children * pricePerAdult * childRatio +
+      passengers.infants * pricePerAdult * infantRatio
+    );
+  }
+
+  function calculateBaggagePrice() {
+    const bags = parseInt(document.getElementById('baggage').value);
+    if (bags === 0) return 0;
+    return bags * 70; // ~70 CHF за место (лоукостеры)
+  }
+
+  // ===== ПРОГНОЗ ЦЕН =====
+  function getDaysUntilDeparture(dateStr) {
+    if (!dateStr) return 30;
+    const dep = new Date(dateStr);
+    const now = new Date();
+    return Math.max(1, Math.round((dep - now) / (1000 * 60 * 60 * 24)));
+  }
+
+  function generatePriceHistory(currentPrice, daysToDeparture, route) {
+    const history = [];
+    const seed = route.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+    const volatility = 0.15 + (seed % 10) / 100;
+    let basePrice = currentPrice * (1 + volatility * 0.5);
+    for (let i = 30; i >= 0; i--) {
+      const daysToDep = daysToDeparture + i;
+      let multiplier = 1;
+      if (daysToDep > 60) multiplier = 1.15;
+      else if (daysToDep > 21 && daysToDep <= 60) multiplier = 0.95;
+      else if (daysToDep > 7 && daysToDep <= 21) multiplier = 1.1;
+      else if (daysToDep <= 7) multiplier = 1.4;
+      const noise = 1 + (Math.sin(seed + i) * volatility * 0.3);
+      history.push(Math.round(basePrice * multiplier * noise));
+    }
+    return history;
+  }
+
+  function predictPrice(daysToDeparture, currentPrice, history, airline) {
+    const recent = history.slice(-7);
+    const trend = recent[recent.length - 1] - recent[0];
+    const trendPct = (trend / recent[0]) * 100;
+    let verdict, confidence, reason, cssClass, emoji;
+
+    if (daysToDeparture <= 7) {
+      verdict = 'СРОЧНО ПОКУПАТЬ'; confidence = 92; emoji = '🔴';
+      reason = `До вылета менее недели. Цены взлетят в ближайшие 2-3 дня на 30-60%.`;
+      cssClass = 'forecast-urgent';
+    } else if (daysToDeparture <= 14) {
+      if (trendPct > 5) {
+        verdict = 'ПОКУПАТЬ СЕЙЧАС'; confidence = 88; emoji = '🔴';
+        reason = `Цена растёт (+${trendPct.toFixed(1)}% за неделю). Через 3-5 дней будет ещё дороже.`;
+        cssClass = 'forecast-urgent';
+      } else {
+        verdict = 'МОЖНО ПОДОЖДАТЬ 2-3 ДНЯ'; confidence = 65; emoji = '🟠';
+        reason = `Цена стабильна. Небольшой шанс снижения, но риск роста выше.`;
+        cssClass = 'forecast-soon';
+      }
+    } else if (daysToDeparture <= 21) {
+      if (trendPct < -3) {
+        verdict = 'ПОДОЖДИТЕ'; confidence = 75; emoji = '🟡';
+        reason = `Цена падает (-${Math.abs(trendPct).toFixed(1)}% за неделю). Есть шанс ещё снизить.`;
+        cssClass = 'forecast-wait';
+      } else {
+        verdict = 'ПОКУПАТЬ В БЛИЖАЙШИЕ ДНИ'; confidence = 80; emoji = '🟠';
+        reason = `Окно оптимальных цен закрывается. Лучше зафиксировать сейчас.`;
+        cssClass = 'forecast-soon';
+      }
+    } else if (daysToDeparture <= 60) {
+      verdict = 'ПОКУПАТЬ СЕЙЧАС'; confidence = 85; emoji = '🟢';
+      reason = `Золотое окно для Европы (21-60 дней до вылета). Ниже цена вряд ли упадёт.`;
+      cssClass = 'forecast-buy';
+    } else if (daysToDeparture <= 90) {
+      verdict = 'МОЖНО ПОДОЖДАТЬ'; confidence = 70; emoji = '🟡';
+      reason = `Рановато. Часто цены снижаются за 6-8 недель до вылета.`;
+      cssClass = 'forecast-wait';
+    } else {
+      verdict = 'ТОРОПИТЬСЯ НЕКУДА'; confidence = 60; emoji = '🟡';
+      reason = `Слишком рано. Распродажи появятся за 2-3 месяца.`;
+      cssClass = 'forecast-wait';
+    }
+
+    const isLowcost = ['Ryanair', 'Wizz Air', 'EasyJet', 'Pegasus'].some(lc => airline.includes(lc));
+    if (isLowcost && daysToDeparture <= 30) {
+      confidence = Math.min(95, confidence + 5);
+      reason += ' ⚠️ Лоукостеры повышают цены по мере заполнения салона.';
+    }
+
+    return { verdict, confidence, reason, cssClass, emoji };
+  }
+
+  function renderForecastChart(history, currentPrice) {
+    const min = Math.min(...history);
+    const max = Math.max(...history);
+    const range = max - min || 1;
+    const width = 280, height = 70, padding = 4;
+    const points = history.map((price, i) => {
+      const x = padding + (i / (history.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((price - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    }).join(' ');
+    const lastX = width - padding;
+    const lastY = height - padding - ((currentPrice - min) / range) * (height - padding * 2);
+    return `
+      <div class="forecast-chart">
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#667eea" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#667eea" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polyline points="${points} ${lastX},${height - padding} ${padding},${height - padding}" fill="url(#grad)" stroke="none"/>
+          <polyline points="${points}" fill="none" stroke="#667eea" stroke-width="2"/>
+          <circle cx="${lastX}" cy="${lastY}" r="4" fill="#f44336" stroke="white" stroke-width="2"/>
+        </svg>
+        <span class="chart-label label-left">30 дней назад</span>
+        <span class="chart-label label-now">СЕЙЧАС</span>
+        <span class="chart-label label-right">→ вылет</span>
+      </div>
+    `;
+  }
+
+  function searchFlights() {
+    savePreferences();
+    const dest = document.getElementById('destination').value || 'Тенерифе';
+    const dOut = document.getElementById('dateOut').value || '25.09';
+    const dBack = document.getElementById('dateBack').value || '01.10';
+    const bags = parseInt(document.getElementById('baggage').value);
+    const daysToDep = getDaysUntilDeparture(document.getElementById('dateOut').value);
+
+    const demoFlights = [
+      { from: 'FMM', to: 'TFS', airline: 'Wizz Air', flight: 'W6-2451', class: 'Эконом', priceBase: 35, stops: 'Прямой', hacks: ['lowcost', 'mistake'] },
+      { from: 'FKB', to: 'MAD', via: 'TFS', airline: 'Wizz Air + Ryanair', flight: 'W6 + FR', class: 'Эконом', priceBase: 35, stops: 'Self-transfer в Мадриде', hacks: ['split', 'lowcost'] },
+      { from: 'BGY', to: 'TFS', airline: 'Ryanair', flight: 'FR4821', class: 'Эконом', priceBase: 45, stops: 'Прямой', hacks: ['lowcost'] },
+      { from: 'BSL', to: 'TFS', airline: 'EasyJet', flight: 'U21245', class: 'Эконом', priceBase: 65, stops: 'Прямой', hacks: ['lowcost'] },
+      { from: 'STR', to: 'TFS', airline: 'Eurowings', flight: 'EW7412', class: 'Эконом', priceBase: 70, stops: 'Прямой', hacks: [] },
+      { from: 'ZRH', to: 'TFS', airline: 'SWISS / Edelweiss', flight: 'LX2134', class: 'Эконом', priceBase: 120, stops: 'Прямой', hacks: [] }
+    ].map(f => {
+      const totalOut = calculateTotalPrice(f.priceBase);
+      const totalBack = calculateTotalPrice(f.priceBase + 5);
+      const baggageTotal = calculateBaggagePrice();
+      const total = totalOut + totalBack + baggageTotal;
+      const history = generatePriceHistory(total, daysToDep, f.from + f.to);
+      const forecast = predictPrice(daysToDep, total, history, f.airline);
+      return { ...f, priceOut: totalOut, priceBack: totalBack, baggageTotal, total, history, forecast, daysToDep };
+    }).sort((a,b) => a.total - b.total);
+
+    renderForecast(demoFlights);
+    renderResults(demoFlights);
+  }
+
+  function renderForecast(flights) {
+    const grid = document.getElementById('forecastGrid');
+    grid.innerHTML = '';
+    flights.slice(0, 4).forEach(f => {
+      const fromName = airportNames[f.from] || f.from;
+      const toName = destNames[f.to] || f.to;
+      const item = document.createElement('div');
+      item.className = `forecast-item ${f.forecast.cssClass}`;
+      item.innerHTML = `
+        <div class="route-label">${fromName} → ${toName}</div>
+        <div class="forecast-verdict">
+          <span class="emoji">${f.forecast.emoji}</span>
+          <span>${f.forecast.verdict}</span>
+          <span class="forecast-confidence">${f.forecast.confidence}%</span>
+        </div>
+        <div class="forecast-reason">${f.forecast.reason}</div>
+        <div style="font-size:11px; color:#555; margin-bottom:4px;">
+          📊 Динамика цены за 30 дней (текущая: <strong>${f.total} CHF</strong>)
+        </div>
+        ${renderForecastChart(f.history, f.total)}
+      `;
+      grid.appendChild(item);
+    });
+    document.getElementById('forecastCard').style.display = 'block';
+  }
+
+  function renderResults(flights) {
+    const list = document.getElementById('resultsList');
+    list.innerHTML = '';
+    const bags = parseInt(document.getElementById('baggage').value);
+
+    flights.forEach(f => {
+      const meta = airportMeta[f.from] || { parking: '—', drive: '—' };
+      const fromName = airportNames[f.from] || f.from;
+      const toName = destNames[f.to] || f.to;
+      const route = f.via ? `${fromName} → ${destNames[f.via] || f.via} (через ${destNames[f.to]})` : `${fromName} → ${toName}`;
+
+      const hacksHtml = f.hacks.map(h => {
+        const labels = {
+          mistake: '<span class="hack-tag hack-mistake">🔥 ОШИБОЧНЫЙ ТАРИФ</span>',
+          split: '<span class="hack-tag hack-split">🔀 РАЗДЕЛЬНЫЕ БИЛЕТЫ</span>',
+          lowcost: '<span class="hack-tag hack-lowcost">💸 ЛОУКОСТЕР</span>'
+        };
+        return labels[h] || '';
+      }).join('');
+
+      const baggageText = bags === 0
+        ? 'Только ручная кладь'
+        : `${bags} мест${bags === 1 ? 'о' : bags < 5 ? 'а' : ''} × 23 кг (+${f.baggageTotal} CHF)`;
+
+      const baggageWarning = f.hacks.includes('lowcost') && bags > 0
+        ? `<div class="warning-badge">⚠️ Лоукостер: багаж нужно оплачивать отдельно онлайн (~70 CHF/место)</div>`
+        : '';
+
+      const cardClass = f.forecast.cssClass === 'forecast-urgent' ? 'urgent' : f.forecast.cssClass === 'forecast-buy' ? 'balance' : '';
+
+      const card = document.createElement('div');
+      card.className = `flight-card ${cardClass}`;
+      card.innerHTML = `
+        <div class="flight-card-header">
+          <span class="flight-route">${route}</span>
+          <span class="flight-price">~${f.total} CHF</span>
+        </div>
+        <div class="flight-details">
+          <strong>Авиакомпания:</strong> ${f.airline} | <strong>Рейс:</strong> ${f.flight} | <strong>Класс:</strong> ${f.class}<br>
+          <strong>Даты:</strong> ${document.getElementById('dateOut').value || '25.09'} – ${document.getElementById('dateBack').value || '01.10'} (гибкость ±3 дня)<br>
+          <strong>Пересадки:</strong> ${f.stops} | <strong>Виза:</strong> <span class="visa-ok">✓ Без визы (Шенген/Турция)</span><br>
+          <strong>Багаж:</strong> ${baggageText}<br>
+          <strong>Логистика:</strong> 🅿️ Парковка ~${meta.parking} | 🚗 Из Туна: ~${meta.drive}<br>
+          ${hacksHtml}
+          ${baggageWarning}
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    document.getElementById('flightsCount').textContent = flights.length;
+    const totals = flights.map(f => f.total);
+    document.getElementById('bestPrice').textContent = `${Math.min(...totals)} CHF`;
+    document.getElementById('avgPrice').textContent = `${Math.round(totals.reduce((a,b)=>a+b,0)/totals.length)} CHF`;
+
+    const cheapest = flights[0];
+    const balance = flights.filter(f => !f.hacks.includes('split')).reduce((a,b) => a.total < b.total ? a : b);
+
+    const chFrom = airportNames[cheapest.from] || cheapest.from;
+    const chTo = destNames[cheapest.to] || cheapest.to;
+    const balFrom = airportNames[balance.from] || balance.from;
+    const balTo = destNames[balance.to] || balance.to;
+
+    document.getElementById('summaryCheapest').innerHTML = `<strong>${chFrom} → ${chTo}</strong> на ${cheapest.airline} — ~${cheapest.total} CHF за ${passengers.adults + passengers.children + passengers.infants} чел. Причина: минимальная возможная цена${cheapest.hacks.includes('split') ? ', но с риском self-transfer' : ''}.`;
+    document.getElementById('summaryBalance').innerHTML = `<strong>${balFrom} → ${balTo}</strong> на ${balance.airline} — ~${balance.total} CHF. Причина: прямой рейс, удобная парковка (${airportMeta[balance.from]?.parking}), дорога из Туна ~${airportMeta[balance.from]?.drive}.`;
+
+    document.getElementById('checkDate').textContent = new Date().toLocaleString('ru-RU');
+    document.getElementById('summaryCard').style.display = 'block';
+  }
+
+  function exportCSV() {
+    const rows = [['Маршрут','Дата','Авиакомпания','Рейс','Класс','Цена Туда','Цена Обратно','Багаж','Итого','Пересадки','Хаки','Парковка','Дорога из Туна']];
+    document.querySelectorAll('.flight-card').forEach(card => {
+      const text = card.innerText.replace(/\n/g,' | ');
+      rows.push([text]);
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'flights.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  document.querySelectorAll('.airport-chip').forEach(chip => {
+    chip.addEventListener('click', e => {
+      if (e.target.tagName !== 'INPUT') {
+        const input = chip.querySelector('input');
+        input.checked = !input.checked;
+      }
+      chip.classList.toggle('active', chip.querySelector('input').checked);
     });
   });
 
-  function calcPrice(base) {
-    // Взрослые 100%, дети 2-15 лет ~70%, младенцы ~10%
-    return Math.round(base * pax.adults + base * 0.7 * pax.children + base * 0.1 * pax.infants);
-  }
+  document.querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', savePreferences);
+  });
 
-  function search() {
-    const dest = document.getElementById('destination').value || 'Тенерифе (TFS)';
-    const dOut = document.getElementById('dateOut').value || '25.09';
-    const dBack = document.getElementById('dateBack').value || '01.10';
-    
-    // Демо-данные, строго соответствующие правилам v7.1 (без таблиц, только списки, багаж отдельно)
-    const flights = [
-      { route: 'FKB → MAD → TFS 🔥', airline: 'Wizz Air + Ryanair', priceBase: 35, stops: 'Self-transfer MAD', hacks: ['split', 'lowcost'], parking: '~70 CHF/нед', drive: '2ч', visa: 'Без визы (Шенген)' },
-      { route: 'FMM → TFS', airline: 'Wizz Air', priceBase: 38, stops: 'Прямой', hacks: ['lowcost', 'mistake'], parking: '~60 CHF/нед', drive: '3ч 30м', visa: 'Без визы (Шенген)' },
-      { route: 'BGY → TFS', airline: 'Ryanair', priceBase: 45, stops: 'Прямой', hacks: ['lowcost'], parking: '~65 CHF/нед', drive: '3ч 30м', visa: 'Без визы (Шенген)' },
-      { route: 'BSL → TFS', airline: 'EasyJet', priceBase: 65, stops: 'Прямой', hacks: ['lowcost'], parking: '~110 CHF/нед', drive: '1ч 15м', visa: 'Без визы' },
-      { route: 'ZRH → TFS', airline: 'SWISS / Edelweiss', priceBase: 120, stops: 'Прямой', hacks: [], parking: '~180 CHF/нед', drive: '1ч 15м', visa: 'Без визы' }
-    ];
-
-    const list = document.getElementById('resultsList');
-    list.innerHTML = '';
-    
-    flights.forEach(f => {
-      const total = calcPrice(f.priceBase) * 2; // туда-обратно
-      const bagWarning = f.hacks.includes('lowcost') ? '<span class="warning-badge">⚠️ Внимание: цена БЕЗ багажа. Добавление 4-х мест (23 кг) увеличит стоимость примерно на +280 CHF.</span>' : '<span class="warning-badge" style="background:#e8f5e9; color:#2e7d32;">✅ Багаж обычно включен (проверьте тариф)</span>';
-      const urgentClass = f.hacks.includes('mistake') || f.hacks.includes('split') ? 'urgent' : '';
-      
-      const item = document.createElement('div');
-      item.className = `result-item ${urgentClass}`;
-      item.innerHTML = `
-        <div class="result-header">
-          <span class="route-name">${f.route}</span>
-          <span class="price-tag">~${total} CHF</span>
-        </div>
-        <div class="result-details">
-          <strong>Авиакомпания:</strong> ${f.airline} | <strong>Даты:</strong> ${dOut} – ${dBack} (гибкость +/- 3 дня)<br>
-          <strong>Пересадки:</strong> ${f.stops} | <strong>Виза:</strong> ${f.visa}<br>
-          <strong>Логистика:</strong> Парковка ~${f.parking} | Выезд из Туна: ~${f.drive}<br>
-          ${f.hacks.map(h => `<span class="hack-tag">${h === 'mistake' ? '🔥 ERROR FARE' : h === 'split' ? '🔀 SPLIT' : '💸 LOWCOST'}</span>`).join('')}
-          ${bagWarning}
-        </div>
-      `;
-      list.appendChild(item);
-    });
-
-    document.getElementById('sumCheap').textContent = `FMM → TFS на Wizz Air (~${calcPrice(38)*2} CHF). Причина: минимальная возможная цена, прямой рейс из бюджетного хаба.`;
-    document.getElementById('sumBalance').textContent = `BSL → TFS на EasyJet (~${calcPrice(65)*2} CHF). Причина: прямой рейс, всего 1ч 15м на авто из Туна, парковка ~110 CHF/нед, нет рисков self-transfer.`;
-    document.getElementById('checkDate').textContent = new Date().toLocaleString('ru-RU');
-
-    document.getElementById('resultsCard').style.display = 'block';
-    document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth' });
-  }
+  loadPreferences();
 </script>
 </body>
 </html>
