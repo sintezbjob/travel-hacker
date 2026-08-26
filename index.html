@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI v8.5 — любое направление</title>
+<title>Travel Hacker AI v8.6 — исправлен баг направления</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -65,7 +65,6 @@
     border-color: #667eea;
   }
 
-  /* Автодополнение */
   .autocomplete-list {
     position: absolute;
     top: 100%;
@@ -75,7 +74,7 @@
     border: 2px solid #667eea;
     border-top: none;
     border-radius: 0 0 8px 8px;
-    max-height: 240px;
+    max-height: 280px;
     overflow-y: auto;
     z-index: 100;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -545,8 +544,8 @@
 <div class="container">
 
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v8.5 — любое направление</span></h1>
-    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • 20+ направлений • Прогноз цен</div>
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.6 — баг направления исправлен</span></h1>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • 35+ направлений</div>
 
     <div class="preferences-note">
       💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
@@ -555,7 +554,7 @@
     <div class="form-grid">
       <div class="form-group">
         <label>🛬 Куда</label>
-        <input type="text" id="destination" placeholder="Например: Тбилиси, Варшава, Барселона..." autocomplete="off">
+        <input type="text" id="destination" placeholder="Например: Барселона, Тбилиси, Варшава..." autocomplete="off">
         <div class="autocomplete-list" id="autocompleteList"></div>
       </div>
       <div class="form-group">
@@ -719,76 +718,45 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'travelHackerPrefs_v85';
+  const STORAGE_KEY = 'travelHackerPrefs_v86';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
   let selectedDestination = null;
 
   // ===== БАЗА НАПРАВЛЕНИЙ =====
   const destinations = [
-    // Испания
     { keywords: ['тенерифе', 'tenerife', 'tfs', 'канары'], code: 'TFS', name: 'Тенерифе Южный', country: 'Испания', basePrice: 45, baseDuration: 270, airlines: ['Wizz Air', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['пальма', 'майорка', 'palma', 'pmi'], code: 'PMI', name: 'Пальма-де-Майорка', country: 'Испания', basePrice: 50, baseDuration: 170, airlines: ['EasyJet', 'Ryanair', 'Eurowings'], visa: 'schengen' },
     { keywords: ['барселона', 'barcelona', 'bcn'], code: 'BCN', name: 'Барселона', country: 'Испания', basePrice: 55, baseDuration: 150, airlines: ['Vueling', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['мадрид', 'madrid', 'mad'], code: 'MAD', name: 'Мадрид', country: 'Испания', basePrice: 60, baseDuration: 170, airlines: ['Iberia', 'Ryanair', 'EasyJet'], visa: 'schengen' },
-    { keywords: ['малига', 'малага', 'malaga', 'agp'], code: 'AGP', name: 'Малага', country: 'Испания', basePrice: 55, baseDuration: 170, airlines: ['Ryanair', 'EasyJet', 'Vueling'], visa: 'schengen' },
+    { keywords: ['малага', 'malaga', 'agp'], code: 'AGP', name: 'Малага', country: 'Испания', basePrice: 55, baseDuration: 170, airlines: ['Ryanair', 'EasyJet', 'Vueling'], visa: 'schengen' },
     { keywords: ['аликанте', 'alicante', 'alc'], code: 'ALC', name: 'Аликанте', country: 'Испания', basePrice: 60, baseDuration: 170, airlines: ['Ryanair', 'EasyJet'], visa: 'schengen' },
-    
-    // Италия
     { keywords: ['рим', 'rome', 'fco', 'чампино'], code: 'FCO', name: 'Рим Фьюмичино', country: 'Италия', basePrice: 50, baseDuration: 130, airlines: ['Wizz Air', 'Ryanair', 'ITA Airways'], visa: 'schengen' },
     { keywords: ['милан', 'milan', 'mxp', 'мальпенса'], code: 'MXP', name: 'Милан Мальпенса', country: 'Италия', basePrice: 45, baseDuration: 60, airlines: ['EasyJet', 'SWISS'], visa: 'schengen' },
     { keywords: ['неаполь', 'naples', 'nap'], code: 'NAP', name: 'Неаполь', country: 'Италия', basePrice: 60, baseDuration: 140, airlines: ['Wizz Air', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['венеция', 'venice', 'vce'], code: 'VCE', name: 'Венеция', country: 'Италия', basePrice: 55, baseDuration: 110, airlines: ['EasyJet', 'Ryanair'], visa: 'schengen' },
-    
-    // Польша
     { keywords: ['варшава', 'warsaw', 'waw'], code: 'WAW', name: 'Варшава', country: 'Польша', basePrice: 40, baseDuration: 130, airlines: ['Wizz Air', 'LOT', 'Ryanair'], visa: 'schengen' },
     { keywords: ['краков', 'krakow', 'krk'], code: 'KRK', name: 'Краков', country: 'Польша', basePrice: 35, baseDuration: 120, airlines: ['Wizz Air', 'Ryanair'], visa: 'schengen' },
     { keywords: ['гданьск', 'gdansk', 'gdn'], code: 'GDN', name: 'Гданьск', country: 'Польша', basePrice: 35, baseDuration: 130, airlines: ['Wizz Air', 'Ryanair'], visa: 'schengen' },
-    
-    // Грузия
     { keywords: ['тбилиси', 'tbilisi', 'tbs'], code: 'TBS', name: 'Тбилиси', country: 'Грузия', basePrice: 90, baseDuration: 240, airlines: ['Georgian Airways', 'Wizz Air', 'Pegasus'], visa: 'no_visa_1year' },
-    { keywords: ['батами', 'батуми', 'batumi', 'bus'], code: 'BUS', name: 'Батуми', country: 'Грузия', basePrice: 95, baseDuration: 250, airlines: ['Georgian Airways', 'Wizz Air'], visa: 'no_visa_1year' },
-    
-    // Турция
+    { keywords: ['батуми', 'batumi', 'bus'], code: 'BUS', name: 'Батуми', country: 'Грузия', basePrice: 95, baseDuration: 250, airlines: ['Georgian Airways', 'Wizz Air'], visa: 'no_visa_1year' },
     { keywords: ['стамбул', 'istanbul', 'ist'], code: 'IST', name: 'Стамбул', country: 'Турция', basePrice: 80, baseDuration: 200, airlines: ['Turkish Airlines', 'Pegasus', 'AJet'], visa: 'no_visa' },
     { keywords: ['анталья', 'antalya', 'ayt'], code: 'AYT', name: 'Анталья', country: 'Турция', basePrice: 85, baseDuration: 220, airlines: ['Pegasus', 'SunExpress', 'Corendon'], visa: 'no_visa' },
     { keywords: ['измир', 'izmir', 'izm'], code: 'IZM', name: 'Измир', country: 'Турция', basePrice: 80, baseDuration: 210, airlines: ['Pegasus', 'SunExpress'], visa: 'no_visa' },
-    
-    // Греция
     { keywords: ['афины', 'athens', 'ath'], code: 'ATH', name: 'Афины', country: 'Греция', basePrice: 70, baseDuration: 180, airlines: ['Aegean', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['крит', 'crete', 'chania', 'хания'], code: 'CHQ', name: 'Ханья (Крит)', country: 'Греция', basePrice: 80, baseDuration: 200, airlines: ['Ryanair', 'EasyJet', 'Aegean'], visa: 'schengen' },
     { keywords: ['санторини', 'santorini', 'jtr'], code: 'JTR', name: 'Санторини', country: 'Греция', basePrice: 95, baseDuration: 200, airlines: ['Ryanair', 'EasyJet', 'Aegean'], visa: 'schengen' },
-    
-    // Португалия
     { keywords: ['лиссабон', 'lisbon', 'lis'], code: 'LIS', name: 'Лиссабон', country: 'Португалия', basePrice: 75, baseDuration: 220, airlines: ['TAP', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['порту', 'porto', 'opo'], code: 'OPO', name: 'Порту', country: 'Португалия', basePrice: 70, baseDuration: 210, airlines: ['Ryanair', 'EasyJet', 'TAP'], visa: 'schengen' },
-    
-    // Франция
     { keywords: ['париж', 'paris', 'cdg', 'orly'], code: 'CDG', name: 'Париж', country: 'Франция', basePrice: 55, baseDuration: 100, airlines: ['Air France', 'EasyJet', 'Vueling'], visa: 'schengen' },
     { keywords: ['ницца', 'nice', 'nce'], code: 'NCE', name: 'Ницца', country: 'Франция', basePrice: 50, baseDuration: 90, airlines: ['EasyJet', 'Air France'], visa: 'schengen' },
-    
-    // Великобритания
     { keywords: ['лондон', 'london', 'lhr', 'lgw', 'станстед'], code: 'LGW', name: 'Лондон Гатвик', country: 'Великобритания', basePrice: 65, baseDuration: 130, airlines: ['EasyJet', 'British Airways', 'Wizz Air'], visa: 'visa_required' },
-    
-    // Нидерланды
     { keywords: ['амстердам', 'amsterdam', 'ams'], code: 'AMS', name: 'Амстердам', country: 'Нидерланды', basePrice: 60, baseDuration: 100, airlines: ['KLM', 'EasyJet', 'Transavia'], visa: 'schengen' },
-    
-    // Чехия
     { keywords: ['прага', 'prague', 'prg'], code: 'PRG', name: 'Прага', country: 'Чехия', basePrice: 45, baseDuration: 90, airlines: ['Wizz Air', 'Ryanair', 'Smartwings'], visa: 'schengen' },
-    
-    // Венгрия
     { keywords: ['будапешт', 'budapest', 'bud'], code: 'BUD', name: 'Будапешт', country: 'Венгрия', basePrice: 40, baseDuration: 100, airlines: ['Wizz Air', 'Ryanair'], visa: 'schengen' },
-    
-    // Хорватия
     { keywords: ['загреб', 'zagreb', 'zag'], code: 'ZAG', name: 'Загреб', country: 'Хорватия', basePrice: 50, baseDuration: 100, airlines: ['Ryanair', 'EasyJet', 'Croatia Airlines'], visa: 'schengen' },
     { keywords: ['сплит', 'split', 'spt'], code: 'SPU', name: 'Сплит', country: 'Хорватия', basePrice: 55, baseDuration: 120, airlines: ['Ryanair', 'EasyJet'], visa: 'schengen' },
-    
-    // Армения
     { keywords: ['ереван', 'yerevan', 'evn'], code: 'EVN', name: 'Ереван', country: 'Армения', basePrice: 100, baseDuration: 250, airlines: ['FlyOne', 'Wizz Air'], visa: 'no_visa_1year' },
-    
-    // Сербия
     { keywords: ['белград', 'belgrade', 'beg'], code: 'BEG', name: 'Белград', country: 'Сербия', basePrice: 65, baseDuration: 140, airlines: ['Air Serbia', 'Wizz Air'], visa: 'no_visa_30d' },
-    
-    // Черногория
     { keywords: ['подгорица', 'podgorica', 'tgd'], code: 'TGD', name: 'Подгорица', country: 'Черногория', basePrice: 70, baseDuration: 150, airlines: ['Air Serbia', 'Wizz Air'], visa: 'no_visa_90d' },
     { keywords: ['тиват', 'tivat', 'tiv'], code: 'TIV', name: 'Тиват', country: 'Черногория', basePrice: 75, baseDuration: 150, airlines: ['Wizz Air', 'Air Serbia'], visa: 'no_visa_90d' }
   ];
@@ -822,13 +790,20 @@
     NCE: { parking: '~85 CHF/нед', drive: '~5ч' }
   };
 
-  // ===== АВТОДОПОЛНЕНИЕ =====
+  // ===== АВТОДОПОЛНЕНИЕ (ИСПРАВЛЕНО) =====
   const destInput = document.getElementById('destination');
   const autocompleteList = document.getElementById('autocompleteList');
   const selectedDestDiv = document.getElementById('selectedDest');
 
   destInput.addEventListener('input', function() {
     const query = this.value.toLowerCase().trim();
+    
+    // 🔥 ИСПРАВЛЕНИЕ: сбрасываем selectedDestination при изменении текста
+    if (selectedDestination && selectedDestination.name !== this.value) {
+      selectedDestination = null;
+      selectedDestDiv.classList.remove('show');
+    }
+    
     if (query.length < 2) {
       autocompleteList.classList.remove('show');
       return;
@@ -837,7 +812,8 @@
     const matches = destinations.filter(d => 
       d.keywords.some(k => k.includes(query)) ||
       d.name.toLowerCase().includes(query) ||
-      d.country.toLowerCase().includes(query)
+      d.country.toLowerCase().includes(query) ||
+      d.code.toLowerCase() === query
     ).slice(0, 8);
     
     if (matches.length === 0) {
@@ -853,7 +829,8 @@
     `).join('');
     
     autocompleteList.querySelectorAll('.autocomplete-item').forEach(item => {
-      item.addEventListener('click', function() {
+      item.addEventListener('mousedown', function(e) {
+        e.preventDefault();
         const code = this.dataset.code;
         const dest = destinations.find(d => d.code === code);
         selectDestination(dest);
@@ -882,25 +859,38 @@
     savePreferences();
   }
 
+  // 🔥 УЛУЧШЕННАЯ функция поиска направления
   function findDestination(query) {
     if (!query) return null;
     const q = query.toLowerCase().trim();
     
-    // Точное совпадение по коду
+    // 1. Точное совпадение по коду (BCN, TFS, WAW и т.д.)
     const byCode = destinations.find(d => d.code.toLowerCase() === q);
     if (byCode) return byCode;
     
-    // Совпадение по ключевым словам
+    // 2. Точное совпадение по названию
+    const byExactName = destinations.find(d => d.name.toLowerCase() === q);
+    if (byExactName) return byExactName;
+    
+    // 3. Совпадение по ключевым словам (точное)
     const byKeyword = destinations.find(d => 
-      d.keywords.some(k => k === q || k.includes(q) || q.includes(k))
+      d.keywords.some(k => k === q)
     );
     if (byKeyword) return byKeyword;
     
-    // Совпадение по названию или стране
-    const byName = destinations.find(d => 
+    // 4. Вхождение подстроки в ключевые слова
+    const byKeywordContains = destinations.find(d => 
+      d.keywords.some(k => k.includes(q) || q.includes(k))
+    );
+    if (byKeywordContains) return byKeywordContains;
+    
+    // 5. Вхождение подстроки в название или страну
+    const byNameContains = destinations.find(d => 
       d.name.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)
     );
-    return byName;
+    if (byNameContains) return byNameContains;
+    
+    return null;
   }
 
   function changeCount(type, delta) {
@@ -952,7 +942,11 @@
       if (prefs.destination) document.getElementById('destination').value = prefs.destination;
       if (prefs.destCode) {
         const dest = destinations.find(d => d.code === prefs.destCode);
-        if (dest) selectDestination(dest);
+        if (dest) {
+          selectedDestination = dest;
+          selectedDestDiv.innerHTML = `✅ Выбрано: <strong>${dest.name}</strong> (${dest.code}), ${dest.country} • Ориентировочно от ${dest.basePrice} CHF/чел`;
+          selectedDestDiv.classList.add('show');
+        }
       }
       if (prefs.dateOut) document.getElementById('dateOut').value = prefs.dateOut;
       if (prefs.dateBack) document.getElementById('dateBack').value = prefs.dateBack;
@@ -1295,18 +1289,35 @@
   function searchFlights() {
     savePreferences();
     
-    // Определяем направление
-    const destInput = document.getElementById('destination').value;
-    let dest = selectedDestination || findDestination(destInput);
+    const destInputValue = document.getElementById('destination').value;
     
-    if (!dest) {
-      alert('❌ Направление не найдено. Попробуйте выбрать из списка (начните вводить название города).');
-      return;
+    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: всегда перепроверяем направление
+    let dest = null;
+    
+    // Сначала проверяем, что selectedDestination соответствует введённому тексту
+    if (selectedDestination) {
+      const matches = selectedDestination.name === destInputValue ||
+                      selectedDestination.code.toLowerCase() === destInputValue.toLowerCase().trim() ||
+                      selectedDestination.keywords.some(k => k === destInputValue.toLowerCase().trim());
+      if (!matches) {
+        selectedDestination = null;
+      }
     }
     
-    // Если пользователь ввёл название, но не выбрал из списка — выбираем автоматически
-    if (!selectedDestination || selectedDestination.code !== dest.code) {
-      selectDestination(dest);
+    // Если selectedDestination есть и совпадает — используем его
+    if (selectedDestination) {
+      dest = selectedDestination;
+    } else {
+      // Иначе ищем по введённому тексту
+      dest = findDestination(destInputValue);
+      if (dest) {
+        selectDestination(dest);
+      }
+    }
+    
+    if (!dest) {
+      alert(`❌ Направление "${destInputValue}" не найдено.\n\nПопробуйте:\n• Выбрать из списка подсказок (начните вводить название)\n• Использовать английское название (Barcelona, Warsaw, Tbilisi)\n• Использовать код аэропорта (BCN, WAW, TBS)`);
+      return;
     }
 
     const dOut = document.getElementById('dateOut').value;
@@ -1316,7 +1327,6 @@
     const selfTransferEnabled = document.getElementById('selfTransfer').checked;
     const daysToDep = getDaysUntilDeparture(dOut);
 
-    // Генерируем рейсы на основе выбранного направления
     const selectedAirports = Array.from(document.querySelectorAll('#airportsGrid input:checked')).map(i => i.value);
     
     if (selectedAirports.length === 0) {
@@ -1324,14 +1334,11 @@
       return;
     }
 
-    // Для каждого выбранного аэропорта вылета создаём рейс
     let allFlights = [];
     selectedAirports.forEach((fromCode, idx) => {
-      // Основная авиакомпания из списка направления
       const mainAirline = dest.airlines[idx % dest.airlines.length];
       const isLowcost = ['Ryanair', 'Wizz Air', 'EasyJet', 'Pegasus'].includes(mainAirline);
       
-      // Вариация цены в зависимости от аэропорта вылета
       const airportPriceModifier = {
         'FMM': 0.85, 'FKB': 0.90, 'BGY': 0.95, 'MXP': 0.95,
         'STR': 1.0, 'SXB': 1.0, 'BSL': 1.05, 'ZRH': 1.15,
@@ -1347,7 +1354,7 @@
       if (isLowcost) hacks.push('lowcost');
       if (idx === 0 && dest.basePrice < 50) hacks.push('mistake');
       
-      const flight = {
+      allFlights.push({
         from: fromCode,
         to: dest.code,
         destName: dest.name,
@@ -1361,11 +1368,8 @@
         stops: 'Прямой',
         hacks: hacks,
         visa: dest.visa
-      };
+      });
       
-      allFlights.push(flight);
-      
-      // Добавляем self-transfer вариант для некоторых направлений
       if (selfTransferEnabled && idx < 2 && dest.basePrice > 60) {
         const hub = dest.visa === 'schengen' ? 'MAD' : 'IST';
         const hubName = hub === 'MAD' ? 'Мадрид' : 'Стамбул';
