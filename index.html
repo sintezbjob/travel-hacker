@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI v8.1 — с рабочей гибкостью дат</title>
+<title>Travel Hacker AI v8.2 — Final Edition</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -292,7 +292,7 @@
   .hack-lowcost { background: #e3f2fd; color: #1565c0; }
   .visa-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
 
-  /* ===== НОВОЕ: КАЛЕНДАРЬ ЛУЧШИХ ЦЕН ===== */
+  /* ===== КАЛЕНДАРЬ ЛУЧШИХ ЦЕН (УЛУЧШЕННЫЙ) ===== */
   .flex-calendar {
     margin-top: 12px;
     padding: 12px;
@@ -322,7 +322,12 @@
     font-size: 11px;
     border: 2px solid transparent;
     transition: all 0.2s;
-    cursor: default;
+    cursor: pointer;
+  }
+  .flex-day:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-color: #667eea;
   }
   .flex-day .day-name {
     font-weight: 600;
@@ -504,8 +509,8 @@
 <div class="container">
 
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v8.1 — гибкость дат</span></h1>
-    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Прогноз цен • Рабочая гибкость ±3 дня</div>
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.2 Final</span></h1>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Прогноз цен • Кликабельные календари</div>
 
     <div class="preferences-note">
       💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
@@ -678,7 +683,7 @@
     </div>
     <div class="summary-item summary-hack">
       <h3>💡 СОВЕТ ХАКЕРА</h3>
-      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже. <strong>Включите гибкость дат — это часто экономит 10-30% от стоимости!</strong></p>
+      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже. <strong>Включите гибкость дат и кликайте на лучшие даты в календаре!</strong></p>
     </div>
     <p style="font-size:11px; color:#888; margin-top:12px; border-top:1px solid #eee; padding-top:8px;">
       📅 <strong>ДАТА ПРОВЕРКИ ЦЕН:</strong> <span id="checkDate"></span><br>
@@ -689,7 +694,7 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'travelHackerPrefs_v81';
+  const STORAGE_KEY = 'travelHackerPrefs_v82';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
 
   const airportNames = {
@@ -811,7 +816,7 @@
     return bags * 70;
   }
 
-  // ===== НОВОЕ: РАБОТА С ГИБКОСТЬЮ ДАТ =====
+  // ===== УЛУЧШЕННАЯ РАБОТА С ГИБКОСТЬЮ ДАТ =====
   function addDays(dateStr, days) {
     const d = new Date(dateStr);
     d.setDate(d.getDate() + days);
@@ -830,34 +835,51 @@
 
   const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 
-  // Генерация цены для конкретной даты (эвристика)
-  function generatePriceForDate(basePrice, date, seed) {
+  // УЛУЧШЕННАЯ генерация цены для конкретной даты
+  function generatePriceForDate(basePrice, date, seed, daysToDep) {
     const dayOfWeek = date.getDay();
-    // Паттерн: вторник/среда дешевле, пятница/воскресенье дороже
-    let multiplier = 1;
-    if (dayOfWeek === 2 || dayOfWeek === 3) multiplier = 0.88; // Вт, Ср — дешевле
-    else if (dayOfWeek === 5 || dayOfWeek === 0) multiplier = 1.15; // Пт, Вс — дороже
-    else if (dayOfWeek === 1 || dayOfWeek === 4) multiplier = 0.95; // Пн, Чт
-    else multiplier = 1.05; // Сб
-
-    // Небольшой шум на основе seed
-    const noise = 1 + (Math.sin(seed + date.getDate() * 7) * 0.08);
-    return Math.round(basePrice * multiplier * noise);
+    const month = date.getMonth();
+    
+    // День недели (Вт/Ср дешевле, Пт/Вс дороже)
+    let dowMultiplier = 1;
+    if (dayOfWeek === 2 || dayOfWeek === 3) dowMultiplier = 0.85;
+    else if (dayOfWeek === 5 || dayOfWeek === 0) dowMultiplier = 1.20;
+    else if (dayOfWeek === 1 || dayOfWeek === 4) dowMultiplier = 0.95;
+    else dowMultiplier = 1.05;
+    
+    // Сезонность (лето дороже)
+    let seasonMultiplier = 1;
+    if (month >= 5 && month <= 7) seasonMultiplier = 1.15;
+    else if (month === 11 || month === 0) seasonMultiplier = 1.10;
+    else if (month >= 2 && month <= 4) seasonMultiplier = 0.95;
+    
+    // Близость к вылету
+    let proximityMultiplier = 1;
+    if (daysToDep <= 7) proximityMultiplier = 1.40;
+    else if (daysToDep <= 14) proximityMultiplier = 1.20;
+    else if (daysToDep <= 21) proximityMultiplier = 1.05;
+    else if (daysToDep >= 60) proximityMultiplier = 1.10;
+    
+    // Увеличенный шум (±20%)
+    const noise = 1 + (Math.sin(seed + date.getDate() * 13 + date.getMonth() * 7) * 0.20);
+    
+    return Math.round(basePrice * dowMultiplier * seasonMultiplier * proximityMultiplier * noise);
   }
 
-  // Генерация 7 дат (исходная ±3 дня) с ценами
-  function generateFlexibleDates(baseDateStr, basePrice, seed) {
+  // Генерация 7 дат с ценами
+  function generateFlexibleDates(baseDateStr, basePrice, seed, direction) {
     if (!baseDateStr) {
-      // Если дата не указана, используем сегодня + 30 дней как базу
       const base = new Date();
       base.setDate(base.getDate() + 30);
       baseDateStr = formatDateISO(base);
     }
     const baseDate = new Date(baseDateStr);
+    const today = new Date();
     const dates = [];
     for (let i = -3; i <= 3; i++) {
       const d = addDays(baseDate, i);
-      const price = generatePriceForDate(basePrice, d, seed);
+      const daysToDep = Math.max(1, Math.round((d - today) / (1000 * 60 * 60 * 24)));
+      const price = generatePriceForDate(basePrice, d, seed + i * 17, daysToDep);
       dates.push({
         date: d,
         dateStr: formatDateISO(d),
@@ -870,7 +892,6 @@
     return dates;
   }
 
-  // Находит лучшую дату и считает экономию
   function findBestDate(dates) {
     const sorted = [...dates].sort((a, b) => a.price - b.price);
     const best = sorted[0];
@@ -879,8 +900,8 @@
     return { best, original, saving };
   }
 
-  // Рендер календаря лучших цен
-  function renderFlexCalendar(dates, bestDate, saving) {
+  // КЛИКАБЕЛЬНЫЙ календарь
+  function renderFlexCalendar(dates, bestDate, saving, type) {
     const flexEnabled = document.getElementById('flexDates').checked;
     if (!flexEnabled) return '';
 
@@ -891,7 +912,7 @@
       if (isBest) cls += ' best';
       else if (isOriginal) cls += ' original';
       return `
-        <div class="${cls}">
+        <div class="${cls}" onclick="selectDate('${d.dateStr}', '${type}')" title="Нажмите, чтобы выбрать ${d.displayDate} (${d.dayName})">
           <div class="day-name">${d.dayName}</div>
           <div class="day-date">${d.displayDate}</div>
           <div class="day-price">${d.price} CHF</div>
@@ -901,20 +922,33 @@
 
     let savingHtml = '';
     if (saving > 0) {
-      savingHtml = `<div class="flex-saving positive">✅ Сдвиньте вылет на <strong>${bestDate.displayDate}</strong> (${bestDate.dayName}) и сэкономьте <strong>${saving} CHF</strong>! Это лучшая дата в окне ±3 дня.</div>`;
+      savingHtml = `<div class="flex-saving positive">✅ Кликните на <strong>${bestDate.displayDate}</strong> (${bestDate.dayName}) и сэкономьте <strong>${saving} CHF</strong>!</div>`;
     } else if (saving < 0) {
-      savingHtml = `<div class="flex-saving">⚠️ Выбранная дата (${dates.find(d=>d.offset===0).displayDate}) уже оптимальна. Сдвиг увеличит цену на ${Math.abs(saving)} CHF.</div>`;
+      savingHtml = `<div class="flex-saving">⚠️ Выбранная дата уже оптимальна. Сдвиг увеличит цену на ${Math.abs(saving)} CHF.</div>`;
     } else {
-      savingHtml = `<div class="flex-saving">💡 Цены в окне ±3 дня примерно одинаковые. Можно лететь в выбранную дату.</div>`;
+      savingHtml = `<div class="flex-saving">💡 Цены в окне ±3 дня примерно одинаковые.</div>`;
     }
+
+    const title = type === 'out' ? '📆 Календарь вылета (окно ±3 дня)' : '📆 Календарь возврата (окно ±3 дня)';
 
     return `
       <div class="flex-calendar">
-        <div class="flex-calendar-title">📆 Календарь лучших цен (окно ±3 дня от выбранной даты)</div>
+        <div class="flex-calendar-title">${title}</div>
         <div class="flex-calendar-grid">${daysHtml}</div>
         ${savingHtml}
       </div>
     `;
+  }
+
+  // Функция выбора даты при клике
+  function selectDate(dateStr, type) {
+    if (type === 'out') {
+      document.getElementById('dateOut').value = dateStr;
+    } else {
+      document.getElementById('dateBack').value = dateStr;
+    }
+    savePreferences();
+    searchFlights();
   }
 
   // ===== ПРОГНОЗ ЦЕН =====
@@ -1050,11 +1084,9 @@
       const baseBackPrice = calculateTotalPrice(f.priceBase + 5);
       const baggageTotal = calculateBaggagePrice();
 
-      // Генерация гибких дат для вылета
-      const flexDatesOut = flexEnabled ? generateFlexibleDates(dOut, baseOutPrice, seed) : null;
-      const flexDatesBack = flexEnabled && dBack ? generateFlexibleDates(dBack, baseBackPrice, seed + 50) : null;
+      const flexDatesOut = flexEnabled ? generateFlexibleDates(dOut, baseOutPrice, seed, 'out') : null;
+      const flexDatesBack = flexEnabled && dBack ? generateFlexibleDates(dBack, baseBackPrice, seed + 50, 'back') : null;
 
-      // Определяем лучшую цену с учётом гибкости
       let bestOutPrice = baseOutPrice;
       let bestBackPrice = baseBackPrice;
       let bestOutDate = null;
@@ -1159,11 +1191,8 @@
 
       const cardClass = f.forecast.cssClass === 'forecast-urgent' ? 'urgent' : f.forecast.cssClass === 'forecast-buy' ? 'balance' : '';
 
-      // Показываем даты: если гибкость включена — лучшую дату, иначе исходную
       let datesText = '';
       if (flexEnabled && f.bestOutDate) {
-        const origOut = document.getElementById('dateOut').value;
-        const origBack = document.getElementById('dateBack').value;
         datesText = `<strong>Лучшие даты (с учётом гибкости):</strong> ✈️ ${f.bestOutDate.displayDate} (${f.bestOutDate.dayName}) → 🛬 ${f.bestBackDate ? f.bestBackDate.displayDate + ' (' + f.bestBackDate.dayName + ')' : '—'}`;
         if (f.totalSaving > 0) {
           datesText += `<div class="flex-saving positive" style="margin-top:6px;">💰 Экономия от гибкости дат: <strong>${f.totalSaving} CHF</strong></div>`;
@@ -1172,9 +1201,12 @@
         datesText = `<strong>Даты:</strong> ${document.getElementById('dateOut').value || '25.09'} – ${document.getElementById('dateBack').value || '01.10'}`;
       }
 
-      // Календарь лучших цен
-      const flexCalendarHtml = (flexEnabled && f.flexDatesOut)
-        ? renderFlexCalendar(f.flexDatesOut, f.bestOutDate, f.savingOut)
+      const flexCalendarOutHtml = (flexEnabled && f.flexDatesOut)
+        ? renderFlexCalendar(f.flexDatesOut, f.bestOutDate, f.savingOut, 'out')
+        : '';
+      
+      const flexCalendarBackHtml = (flexEnabled && f.flexDatesBack)
+        ? renderFlexCalendar(f.flexDatesBack, f.bestBackDate, f.savingBack, 'back')
         : '';
 
       const card = document.createElement('div');
@@ -1193,7 +1225,8 @@
           ${hacksHtml}
           ${baggageWarning}
         </div>
-        ${flexCalendarHtml}
+        ${flexCalendarOutHtml}
+        ${flexCalendarBackHtml}
       `;
       list.appendChild(card);
     });
@@ -1237,6 +1270,18 @@
     a.href = url; a.download = 'flights.csv'; a.click();
     URL.revokeObjectURL(url);
   }
+
+  // Автоматический пересчёт при смене дат
+  document.getElementById('dateOut').addEventListener('change', () => {
+    if (document.getElementById('resultsList').children.length > 1) {
+      searchFlights();
+    }
+  });
+  document.getElementById('dateBack').addEventListener('change', () => {
+    if (document.getElementById('resultsList').children.length > 1) {
+      searchFlights();
+    }
+  });
 
   document.querySelectorAll('.airport-chip').forEach(chip => {
     chip.addEventListener('click', e => {
