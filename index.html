@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI — Поиск авиабилетов</title>
+<title>Travel Hacker AI v8.1 — с рабочей гибкостью дат</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -233,7 +233,7 @@
   }
   .btn-export:hover { background: #667eea; color: white; }
 
-  /* Карточки результатов (вместо таблиц) */
+  /* Карточки результатов */
   .results-list { display: flex; flex-direction: column; gap: 14px; }
   .flight-card {
     background: #fafbfc;
@@ -291,6 +291,84 @@
   .hack-split { background: #fff3e0; color: #e65100; }
   .hack-lowcost { background: #e3f2fd; color: #1565c0; }
   .visa-ok { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+
+  /* ===== НОВОЕ: КАЛЕНДАРЬ ЛУЧШИХ ЦЕН ===== */
+  .flex-calendar {
+    margin-top: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border-radius: 10px;
+    border: 1px dashed #667eea;
+  }
+  .flex-calendar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1565c0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .flex-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .flex-day {
+    background: white;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+    font-size: 11px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .flex-day .day-name {
+    font-weight: 600;
+    color: #555;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+  .flex-day .day-date {
+    color: #888;
+    font-size: 10px;
+    margin: 2px 0;
+  }
+  .flex-day .day-price {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 12px;
+  }
+  .flex-day.best {
+    background: #27ae60;
+    color: white;
+    border-color: #1e8449;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+  }
+  .flex-day.best .day-name,
+  .flex-day.best .day-date,
+  .flex-day.best .day-price {
+    color: white;
+  }
+  .flex-day.original {
+    border-color: #667eea;
+    background: #e8ecff;
+  }
+  .flex-saving {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: #fff3e0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #e65100;
+    font-weight: 600;
+  }
+  .flex-saving.positive {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
 
   /* ===== ПРОГНОЗ ЦЕН ===== */
   .forecast-card h2 {
@@ -384,7 +462,7 @@
   }
   .forecast-tips li:last-child { border-bottom: none; }
 
-  /* ===== ИТОГОВЫЕ РЕКОМЕНДАЦИИ (РАЗНЫЕ ЦВЕТА) ===== */
+  /* Итоговые рекомендации */
   .summary-card h2 {
     color: #2c3e50;
     font-size: 20px;
@@ -418,6 +496,7 @@
   @media (max-width: 768px) {
     .form-grid { grid-template-columns: 1fr; }
     h1 { font-size: 22px; }
+    .flex-calendar-grid { grid-template-columns: repeat(4, 1fr); }
   }
 </style>
 </head>
@@ -425,8 +504,8 @@
 <div class="container">
 
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v8.0</span></h1>
-    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Прогноз цен</div>
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.1 — гибкость дат</span></h1>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Прогноз цен • Рабочая гибкость ±3 дня</div>
 
     <div class="preferences-note">
       💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
@@ -531,9 +610,18 @@
     </div>
 
     <div class="form-grid">
-      <label class="checkbox-row"><input type="checkbox" id="flexDates" checked><span>📆 Гибкость дат ±3 дня</span></label>
-      <label class="checkbox-row"><input type="checkbox" id="selfTransfer" checked><span>🔀 Разрешить self-transfer</span></label>
-      <label class="checkbox-row"><input type="checkbox" id="mistakeFares" checked><span>🔥 Искать ошибочные тарифы</span></label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="flexDates" checked>
+        <span>📆 Гибкость дат ±3 дня (ищем лучшую цену среди 7 дат)</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="selfTransfer" checked>
+        <span>🔀 Разрешить self-transfer</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="mistakeFares" checked>
+        <span>🔥 Искать ошибочные тарифы</span>
+      </label>
     </div>
 
     <button class="btn-search" onclick="searchFlights()">🔍 Найти лучшие предложения + прогноз цен</button>
@@ -590,7 +678,7 @@
     </div>
     <div class="summary-item summary-hack">
       <h3>💡 СОВЕТ ХАКЕРА</h3>
-      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже.</p>
+      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов до вылета для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже. <strong>Включите гибкость дат — это часто экономит 10-30% от стоимости!</strong></p>
     </div>
     <p style="font-size:11px; color:#888; margin-top:12px; border-top:1px solid #eee; padding-top:8px;">
       📅 <strong>ДАТА ПРОВЕРКИ ЦЕН:</strong> <span id="checkDate"></span><br>
@@ -601,10 +689,9 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'travelHackerPrefs_v8';
+  const STORAGE_KEY = 'travelHackerPrefs_v81';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
 
-  // Полные названия аэропортов и городов
   const airportNames = {
     ZRH: 'Цюрих', BSL: 'Базель', GVA: 'Женева', FDH: 'Фридрихсхафен',
     FKB: 'Карлсруэ', SXB: 'Страсбург', STR: 'Штутгарт',
@@ -721,7 +808,113 @@
   function calculateBaggagePrice() {
     const bags = parseInt(document.getElementById('baggage').value);
     if (bags === 0) return 0;
-    return bags * 70; // ~70 CHF за место (лоукостеры)
+    return bags * 70;
+  }
+
+  // ===== НОВОЕ: РАБОТА С ГИБКОСТЬЮ ДАТ =====
+  function addDays(dateStr, days) {
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  function formatDate(d) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    return `${day}.${month}`;
+  }
+
+  function formatDateISO(d) {
+    return d.toISOString().split('T')[0];
+  }
+
+  const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+  // Генерация цены для конкретной даты (эвристика)
+  function generatePriceForDate(basePrice, date, seed) {
+    const dayOfWeek = date.getDay();
+    // Паттерн: вторник/среда дешевле, пятница/воскресенье дороже
+    let multiplier = 1;
+    if (dayOfWeek === 2 || dayOfWeek === 3) multiplier = 0.88; // Вт, Ср — дешевле
+    else if (dayOfWeek === 5 || dayOfWeek === 0) multiplier = 1.15; // Пт, Вс — дороже
+    else if (dayOfWeek === 1 || dayOfWeek === 4) multiplier = 0.95; // Пн, Чт
+    else multiplier = 1.05; // Сб
+
+    // Небольшой шум на основе seed
+    const noise = 1 + (Math.sin(seed + date.getDate() * 7) * 0.08);
+    return Math.round(basePrice * multiplier * noise);
+  }
+
+  // Генерация 7 дат (исходная ±3 дня) с ценами
+  function generateFlexibleDates(baseDateStr, basePrice, seed) {
+    if (!baseDateStr) {
+      // Если дата не указана, используем сегодня + 30 дней как базу
+      const base = new Date();
+      base.setDate(base.getDate() + 30);
+      baseDateStr = formatDateISO(base);
+    }
+    const baseDate = new Date(baseDateStr);
+    const dates = [];
+    for (let i = -3; i <= 3; i++) {
+      const d = addDays(baseDate, i);
+      const price = generatePriceForDate(basePrice, d, seed);
+      dates.push({
+        date: d,
+        dateStr: formatDateISO(d),
+        displayDate: formatDate(d),
+        dayName: dayNames[d.getDay()],
+        price: price,
+        offset: i
+      });
+    }
+    return dates;
+  }
+
+  // Находит лучшую дату и считает экономию
+  function findBestDate(dates) {
+    const sorted = [...dates].sort((a, b) => a.price - b.price);
+    const best = sorted[0];
+    const original = dates.find(d => d.offset === 0);
+    const saving = original.price - best.price;
+    return { best, original, saving };
+  }
+
+  // Рендер календаря лучших цен
+  function renderFlexCalendar(dates, bestDate, saving) {
+    const flexEnabled = document.getElementById('flexDates').checked;
+    if (!flexEnabled) return '';
+
+    const daysHtml = dates.map(d => {
+      const isBest = d.dateStr === bestDate.dateStr;
+      const isOriginal = d.offset === 0;
+      let cls = 'flex-day';
+      if (isBest) cls += ' best';
+      else if (isOriginal) cls += ' original';
+      return `
+        <div class="${cls}">
+          <div class="day-name">${d.dayName}</div>
+          <div class="day-date">${d.displayDate}</div>
+          <div class="day-price">${d.price} CHF</div>
+        </div>
+      `;
+    }).join('');
+
+    let savingHtml = '';
+    if (saving > 0) {
+      savingHtml = `<div class="flex-saving positive">✅ Сдвиньте вылет на <strong>${bestDate.displayDate}</strong> (${bestDate.dayName}) и сэкономьте <strong>${saving} CHF</strong>! Это лучшая дата в окне ±3 дня.</div>`;
+    } else if (saving < 0) {
+      savingHtml = `<div class="flex-saving">⚠️ Выбранная дата (${dates.find(d=>d.offset===0).displayDate}) уже оптимальна. Сдвиг увеличит цену на ${Math.abs(saving)} CHF.</div>`;
+    } else {
+      savingHtml = `<div class="flex-saving">💡 Цены в окне ±3 дня примерно одинаковые. Можно лететь в выбранную дату.</div>`;
+    }
+
+    return `
+      <div class="flex-calendar">
+        <div class="flex-calendar-title">📆 Календарь лучших цен (окно ±3 дня от выбранной даты)</div>
+        <div class="flex-calendar-grid">${daysHtml}</div>
+        ${savingHtml}
+      </div>
+    `;
   }
 
   // ===== ПРОГНОЗ ЦЕН =====
@@ -838,10 +1031,11 @@
   function searchFlights() {
     savePreferences();
     const dest = document.getElementById('destination').value || 'Тенерифе';
-    const dOut = document.getElementById('dateOut').value || '25.09';
-    const dBack = document.getElementById('dateBack').value || '01.10';
+    const dOut = document.getElementById('dateOut').value;
+    const dBack = document.getElementById('dateBack').value;
     const bags = parseInt(document.getElementById('baggage').value);
-    const daysToDep = getDaysUntilDeparture(document.getElementById('dateOut').value);
+    const flexEnabled = document.getElementById('flexDates').checked;
+    const daysToDep = getDaysUntilDeparture(dOut);
 
     const demoFlights = [
       { from: 'FMM', to: 'TFS', airline: 'Wizz Air', flight: 'W6-2451', class: 'Эконом', priceBase: 35, stops: 'Прямой', hacks: ['lowcost', 'mistake'] },
@@ -850,14 +1044,58 @@
       { from: 'BSL', to: 'TFS', airline: 'EasyJet', flight: 'U21245', class: 'Эконом', priceBase: 65, stops: 'Прямой', hacks: ['lowcost'] },
       { from: 'STR', to: 'TFS', airline: 'Eurowings', flight: 'EW7412', class: 'Эконом', priceBase: 70, stops: 'Прямой', hacks: [] },
       { from: 'ZRH', to: 'TFS', airline: 'SWISS / Edelweiss', flight: 'LX2134', class: 'Эконом', priceBase: 120, stops: 'Прямой', hacks: [] }
-    ].map(f => {
-      const totalOut = calculateTotalPrice(f.priceBase);
-      const totalBack = calculateTotalPrice(f.priceBase + 5);
+    ].map((f, idx) => {
+      const seed = idx * 137 + f.from.charCodeAt(0);
+      const baseOutPrice = calculateTotalPrice(f.priceBase);
+      const baseBackPrice = calculateTotalPrice(f.priceBase + 5);
       const baggageTotal = calculateBaggagePrice();
-      const total = totalOut + totalBack + baggageTotal;
+
+      // Генерация гибких дат для вылета
+      const flexDatesOut = flexEnabled ? generateFlexibleDates(dOut, baseOutPrice, seed) : null;
+      const flexDatesBack = flexEnabled && dBack ? generateFlexibleDates(dBack, baseBackPrice, seed + 50) : null;
+
+      // Определяем лучшую цену с учётом гибкости
+      let bestOutPrice = baseOutPrice;
+      let bestBackPrice = baseBackPrice;
+      let bestOutDate = null;
+      let bestBackDate = null;
+      let savingOut = 0;
+      let savingBack = 0;
+
+      if (flexEnabled && flexDatesOut) {
+        const bestOut = findBestDate(flexDatesOut);
+        bestOutPrice = bestOut.best.price;
+        bestOutDate = bestOut.best;
+        savingOut = bestOut.saving;
+      }
+      if (flexEnabled && flexDatesBack) {
+        const bestBack = findBestDate(flexDatesBack);
+        bestBackPrice = bestBack.best.price;
+        bestBackDate = bestBack.best;
+        savingBack = bestBack.saving;
+      }
+
+      const total = bestOutPrice + bestBackPrice + baggageTotal;
       const history = generatePriceHistory(total, daysToDep, f.from + f.to);
       const forecast = predictPrice(daysToDep, total, history, f.airline);
-      return { ...f, priceOut: totalOut, priceBack: totalBack, baggageTotal, total, history, forecast, daysToDep };
+
+      return {
+        ...f,
+        priceOut: bestOutPrice,
+        priceBack: bestBackPrice,
+        baggageTotal,
+        total,
+        history,
+        forecast,
+        daysToDep,
+        flexDatesOut,
+        flexDatesBack,
+        bestOutDate,
+        bestBackDate,
+        savingOut,
+        savingBack,
+        totalSaving: savingOut + savingBack
+      };
     }).sort((a,b) => a.total - b.total);
 
     renderForecast(demoFlights);
@@ -894,6 +1132,7 @@
     const list = document.getElementById('resultsList');
     list.innerHTML = '';
     const bags = parseInt(document.getElementById('baggage').value);
+    const flexEnabled = document.getElementById('flexDates').checked;
 
     flights.forEach(f => {
       const meta = airportMeta[f.from] || { parking: '—', drive: '—' };
@@ -920,6 +1159,24 @@
 
       const cardClass = f.forecast.cssClass === 'forecast-urgent' ? 'urgent' : f.forecast.cssClass === 'forecast-buy' ? 'balance' : '';
 
+      // Показываем даты: если гибкость включена — лучшую дату, иначе исходную
+      let datesText = '';
+      if (flexEnabled && f.bestOutDate) {
+        const origOut = document.getElementById('dateOut').value;
+        const origBack = document.getElementById('dateBack').value;
+        datesText = `<strong>Лучшие даты (с учётом гибкости):</strong> ✈️ ${f.bestOutDate.displayDate} (${f.bestOutDate.dayName}) → 🛬 ${f.bestBackDate ? f.bestBackDate.displayDate + ' (' + f.bestBackDate.dayName + ')' : '—'}`;
+        if (f.totalSaving > 0) {
+          datesText += `<div class="flex-saving positive" style="margin-top:6px;">💰 Экономия от гибкости дат: <strong>${f.totalSaving} CHF</strong></div>`;
+        }
+      } else {
+        datesText = `<strong>Даты:</strong> ${document.getElementById('dateOut').value || '25.09'} – ${document.getElementById('dateBack').value || '01.10'}`;
+      }
+
+      // Календарь лучших цен
+      const flexCalendarHtml = (flexEnabled && f.flexDatesOut)
+        ? renderFlexCalendar(f.flexDatesOut, f.bestOutDate, f.savingOut)
+        : '';
+
       const card = document.createElement('div');
       card.className = `flight-card ${cardClass}`;
       card.innerHTML = `
@@ -929,13 +1186,14 @@
         </div>
         <div class="flight-details">
           <strong>Авиакомпания:</strong> ${f.airline} | <strong>Рейс:</strong> ${f.flight} | <strong>Класс:</strong> ${f.class}<br>
-          <strong>Даты:</strong> ${document.getElementById('dateOut').value || '25.09'} – ${document.getElementById('dateBack').value || '01.10'} (гибкость ±3 дня)<br>
+          ${datesText}<br>
           <strong>Пересадки:</strong> ${f.stops} | <strong>Виза:</strong> <span class="visa-ok">✓ Без визы (Шенген/Турция)</span><br>
           <strong>Багаж:</strong> ${baggageText}<br>
           <strong>Логистика:</strong> 🅿️ Парковка ~${meta.parking} | 🚗 Из Туна: ~${meta.drive}<br>
           ${hacksHtml}
           ${baggageWarning}
         </div>
+        ${flexCalendarHtml}
       `;
       list.appendChild(card);
     });
@@ -953,7 +1211,13 @@
     const balFrom = airportNames[balance.from] || balance.from;
     const balTo = destNames[balance.to] || balance.to;
 
-    document.getElementById('summaryCheapest').innerHTML = `<strong>${chFrom} → ${chTo}</strong> на ${cheapest.airline} — ~${cheapest.total} CHF за ${passengers.adults + passengers.children + passengers.infants} чел. Причина: минимальная возможная цена${cheapest.hacks.includes('split') ? ', но с риском self-transfer' : ''}.`;
+    let cheapText = `<strong>${chFrom} → ${chTo}</strong> на ${cheapest.airline} — ~${cheapest.total} CHF за ${passengers.adults + passengers.children + passengers.infants} чел.`;
+    if (flexEnabled && cheapest.totalSaving > 0) {
+      cheapText += ` (включая экономию ${cheapest.totalSaving} CHF от гибкости дат).`;
+    }
+    cheapText += ` Причина: минимальная возможная цена${cheapest.hacks.includes('split') ? ', но с риском self-transfer' : ''}.`;
+
+    document.getElementById('summaryCheapest').innerHTML = cheapText;
     document.getElementById('summaryBalance').innerHTML = `<strong>${balFrom} → ${balTo}</strong> на ${balance.airline} — ~${balance.total} CHF. Причина: прямой рейс, удобная парковка (${airportMeta[balance.from]?.parking}), дорога из Туна ~${airportMeta[balance.from]?.drive}.`;
 
     document.getElementById('checkDate').textContent = new Date().toLocaleString('ru-RU');
