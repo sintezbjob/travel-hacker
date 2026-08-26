@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI v8.3 — с временем вылета</title>
+<title>Travel Hacker AI v8.4</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -53,7 +53,6 @@
     color: #7f8c8d;
     margin-bottom: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
   .form-group input, .form-group select {
     padding: 10px 12px;
@@ -78,7 +77,6 @@
     font-weight: 600;
     color: #7f8c8d;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
     display: block;
     margin-bottom: 12px;
   }
@@ -115,7 +113,6 @@
     font-weight: 700;
     cursor: pointer;
   }
-  .counter button:disabled { background: #d0d7e2; cursor: not-allowed; }
   .counter .value { min-width: 24px; text-align: center; font-weight: 700; font-size: 16px; }
   .age-select {
     margin-left: 12px;
@@ -161,11 +158,7 @@
     user-select: none;
   }
   .airport-chip:hover { border-color: #667eea; }
-  .airport-chip.active {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-  }
+  .airport-chip.active { background: #667eea; color: white; border-color: #667eea; }
   .airport-chip input { display: none; }
   .airport-chip .drive-time { font-size: 10px; opacity: 0.8; margin-left: auto; }
 
@@ -246,43 +239,33 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .flight-route {
-    font-weight: 700;
-    font-size: 17px;
-    color: #2c3e50;
-  }
-  .flight-price {
-    font-weight: 700;
-    font-size: 20px;
-    color: #27ae60;
-  }
-  .flight-details {
-    font-size: 13px;
-    color: #555;
-    line-height: 1.7;
-  }
+  .flight-route { font-weight: 700; font-size: 17px; color: #2c3e50; }
+  .flight-price { font-weight: 700; font-size: 20px; color: #27ae60; }
+  .flight-details { font-size: 13px; color: #555; line-height: 1.7; }
   .flight-details strong { color: #2c3e50; }
 
-  /* ===== НОВОЕ: БЛОК ВРЕМЕНИ ВЫЛЕТА ===== */
-  .flight-time-block {
+  /* ===== БЛОК ВРЕМЕНИ ВЫЛЕТА ===== */
+  .time-block {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin: 10px 0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 12px 0;
     border: 1px dashed #667eea;
     flex-wrap: wrap;
+    gap: 10px;
   }
   .time-point {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 80px;
+    min-width: 90px;
+    flex: 0 0 auto;
   }
   .time-point .time-value {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     color: #2c3e50;
     line-height: 1;
@@ -306,42 +289,36 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    min-width: 120px;
+    min-width: 140px;
+    padding: 0 10px;
   }
   .time-arrow .duration {
     font-size: 12px;
     font-weight: 600;
     color: #667eea;
     background: white;
-    padding: 2px 8px;
-    border-radius: 10px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
   .time-arrow .line {
     width: 100%;
     height: 2px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     position: relative;
+    border-radius: 2px;
   }
   .time-arrow .line::after {
     content: '✈️';
     position: absolute;
-    right: -4px;
-    top: -10px;
-    font-size: 16px;
+    right: -6px;
+    top: -11px;
+    font-size: 18px;
   }
   .time-arrow .stops-info {
     font-size: 10px;
     color: #7f8c8d;
-  }
-  .best-time-badge {
-    display: inline-block;
-    background: #27ae60;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 600;
-    margin-left: 8px;
+    text-align: center;
   }
 
   .warning-badge {
@@ -414,10 +391,7 @@
   .flex-day.best .day-date,
   .flex-day.best .day-price,
   .flex-day.best .day-time { color: white; }
-  .flex-day.original {
-    border-color: #667eea;
-    background: #e8ecff;
-  }
+  .flex-day.original { border-color: #667eea; background: #e8ecff; }
   .flex-saving {
     margin-top: 8px;
     padding: 6px 10px;
@@ -427,27 +401,16 @@
     color: #e65100;
     font-weight: 600;
   }
-  .flex-saving.positive {
-    background: #e8f5e9;
-    color: #2e7d32;
-  }
+  .flex-saving.positive { background: #e8f5e9; color: #2e7d32; }
 
-  .forecast-card h2 {
-    color: #2c3e50;
-    font-size: 20px;
-    margin-bottom: 16px;
-  }
+  .forecast-card h2 { color: #2c3e50; font-size: 20px; margin-bottom: 16px; }
   .forecast-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
   }
-  .forecast-item {
-    border-radius: 12px;
-    padding: 16px;
-    border: 2px solid;
-  }
+  .forecast-item { border-radius: 12px; padding: 16px; border: 2px solid; }
   .forecast-buy { background: #e8f5e9; border-color: #4caf50; }
   .forecast-wait { background: #fff3e0; border-color: #ff9800; }
   .forecast-soon { background: #fff8e1; border-color: #ffc107; }
@@ -533,7 +496,7 @@
     .form-grid { grid-template-columns: 1fr; }
     h1 { font-size: 22px; }
     .flex-calendar-grid { grid-template-columns: repeat(4, 1fr); }
-    .flight-time-block { flex-direction: column; }
+    .time-block { flex-direction: column; }
   }
 </style>
 </head>
@@ -541,7 +504,7 @@
 <div class="container">
 
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v8.3 + время вылета</span></h1>
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.4 Final</span></h1>
     <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Время вылета/прилёта • Прогноз цен</div>
 
     <div class="preferences-note">
@@ -646,7 +609,7 @@
 
     <div class="form-grid">
       <label class="checkbox-row"><input type="checkbox" id="flexDates" checked><span>📆 Гибкость дат ±3 дня</span></label>
-      <label class="checkbox-row"><input type="checkbox" id="selfTransfer" checked><span>🔀 Разрешить self-transfer</span></label>
+      <label class="checkbox-row"><input type="checkbox" id="selfTransfer" checked><span>🔀 Разрешить self-transfer (раздельные билеты)</span></label>
       <label class="checkbox-row"><input type="checkbox" id="mistakeFares" checked><span>🔥 Искать ошибочные тарифы</span></label>
     </div>
 
@@ -712,7 +675,7 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'travelHackerPrefs_v83';
+  const STORAGE_KEY = 'travelHackerPrefs_v84';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
 
   const airportNames = {
@@ -727,7 +690,6 @@
     BCN: 'Барселона', ALC: 'Аликанте', AGP: 'Малага',
     IST: 'Стамбул', SAW: 'Стамбул Сабиха', AYT: 'Анталья'
   };
-
   const airportMeta = {
     ZRH: { parking: '~180 CHF/нед', drive: '~1ч 15мин' },
     BSL: { parking: '~110 CHF/нед', drive: '~1ч 15мин' },
@@ -834,13 +796,10 @@
     return bags * 70;
   }
 
-  // ===== НОВОЕ: ГЕНЕРАЦИЯ ВРЕМЕНИ ВЫЛЕТА =====
+  // ===== ВРЕМЯ ВЫЛЕТА =====
   function generateFlightTime(baseTime, seed, dateOffset) {
-    // baseTime — базовое время в минутах от полуночи
-    // Генерируем реалистичное время с учётом паттернов авиакомпаний
-    const variation = Math.sin(seed + dateOffset * 3) * 60; // ±60 минут
+    const variation = Math.sin(seed + dateOffset * 3) * 60;
     let minutes = baseTime + Math.round(variation);
-    // Нормализуем в сутки
     if (minutes < 0) minutes += 1440;
     if (minutes >= 1440) minutes -= 1440;
     const hours = Math.floor(minutes / 60);
@@ -920,7 +879,7 @@
       const d = addDays(baseDate, i);
       const daysToDep = Math.max(1, Math.round((d - today) / (1000 * 60 * 60 * 24)));
       const price = generatePriceForDate(basePrice, d, seed + i * 17, daysToDep);
-      const time = generateFlightTime(360 + (i * 30), seed, i); // базовое время 06:00 ± смещение
+      const time = generateFlightTime(360 + (i * 30), seed, i);
       dates.push({
         date: d,
         dateStr: formatDateISO(d),
@@ -1102,6 +1061,31 @@
     `;
   }
 
+  // ===== ОТДЕЛЬНАЯ ФУНКЦИЯ ДЛЯ БЛОКА ВРЕМЕНИ =====
+  function renderTimeBlock(f) {
+    const fromName = airportNames[f.from] || f.from;
+    const toName = destNames[f.to] || f.to;
+    return `
+      <div class="time-block">
+        <div class="time-point">
+          <div class="time-value">${f.depTime}</div>
+          <div class="time-label">Вылет</div>
+          <div class="time-airport">${fromName}</div>
+        </div>
+        <div class="time-arrow">
+          <div class="duration">⏱️ ${f.duration}</div>
+          <div class="line"></div>
+          <div class="stops-info">${f.stops}</div>
+        </div>
+        <div class="time-point">
+          <div class="time-value">${f.arrTime}</div>
+          <div class="time-label">Прилёт</div>
+          <div class="time-airport">${toName}</div>
+        </div>
+      </div>
+    `;
+  }
+
   function searchFlights() {
     savePreferences();
     const dest = document.getElementById('destination').value || 'Тенерифе';
@@ -1109,23 +1093,30 @@
     const dBack = document.getElementById('dateBack').value;
     const bags = parseInt(document.getElementById('baggage').value);
     const flexEnabled = document.getElementById('flexDates').checked;
+    const selfTransferEnabled = document.getElementById('selfTransfer').checked;
     const daysToDep = getDaysUntilDeparture(dOut);
 
-    // Демо-данные с временем вылета
-    const demoFlights = [
+    // Базовый список рейсов
+    let allFlights = [
       { from: 'FMM', to: 'TFS', airline: 'Wizz Air', flight: 'W6-2451', class: 'Эконом', priceBase: 35, baseDepTime: 360, baseDuration: 270, stops: 'Прямой', hacks: ['lowcost', 'mistake'] },
-      { from: 'FKB', to: 'MAD', via: 'TFS', airline: 'Wizz Air + Ryanair', flight: 'W6 + FR', class: 'Эконом', priceBase: 35, baseDepTime: 420, baseDuration: 420, stops: 'Self-transfer в Мадриде', hacks: ['split', 'lowcost'] },
+      { from: 'FKB', to: 'TFS', via: 'MAD', airline: 'Wizz Air + Ryanair', flight: 'W6 + FR', class: 'Эконом', priceBase: 35, baseDepTime: 420, baseDuration: 420, stops: 'Self-transfer в Мадриде', hacks: ['split', 'lowcost'] },
       { from: 'BGY', to: 'TFS', airline: 'Ryanair', flight: 'FR4821', class: 'Эконом', priceBase: 45, baseDepTime: 480, baseDuration: 280, stops: 'Прямой', hacks: ['lowcost'] },
       { from: 'BSL', to: 'TFS', airline: 'EasyJet', flight: 'U21245', class: 'Эконом', priceBase: 65, baseDepTime: 540, baseDuration: 275, stops: 'Прямой', hacks: ['lowcost'] },
       { from: 'STR', to: 'TFS', airline: 'Eurowings', flight: 'EW7412', class: 'Эконом', priceBase: 70, baseDepTime: 600, baseDuration: 280, stops: 'Прямой', hacks: [] },
       { from: 'ZRH', to: 'TFS', airline: 'SWISS / Edelweiss', flight: 'LX2134', class: 'Эконом', priceBase: 120, baseDepTime: 660, baseDuration: 270, stops: 'Прямой', hacks: [] }
-    ].map((f, idx) => {
+    ];
+
+    // 🔀 ФИЛЬТРАЦИЯ SELF-TRANSFER
+    if (!selfTransferEnabled) {
+      allFlights = allFlights.filter(f => !f.hacks.includes('split'));
+    }
+
+    const demoFlights = allFlights.map((f, idx) => {
       const seed = idx * 137 + f.from.charCodeAt(0);
       const baseOutPrice = calculateTotalPrice(f.priceBase);
       const baseBackPrice = calculateTotalPrice(f.priceBase + 5);
       const baggageTotal = calculateBaggagePrice();
 
-      // Генерация времени вылета
       const depTime = generateFlightTime(f.baseDepTime, seed, 0);
       const duration = generateDuration(f.baseDuration, seed);
       const arrTime = calculateArrivalTime(depTime, duration);
@@ -1186,6 +1177,10 @@
   function renderForecast(flights) {
     const grid = document.getElementById('forecastGrid');
     grid.innerHTML = '';
+    if (flights.length === 0) {
+      document.getElementById('forecastCard').style.display = 'none';
+      return;
+    }
     flights.slice(0, 4).forEach(f => {
       const fromName = airportNames[f.from] || f.from;
       const toName = destNames[f.to] || f.to;
@@ -1215,11 +1210,20 @@
     const bags = parseInt(document.getElementById('baggage').value);
     const flexEnabled = document.getElementById('flexDates').checked;
 
+    if (flights.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">😕</div><div>Рейсы не найдены. Попробуйте включить «Разрешить self-transfer» или расширить список аэропортов.</div></div>';
+      document.getElementById('flightsCount').textContent = '0';
+      document.getElementById('bestPrice').textContent = '0 CHF';
+      document.getElementById('avgPrice').textContent = '0 CHF';
+      document.getElementById('summaryCard').style.display = 'none';
+      return;
+    }
+
     flights.forEach(f => {
       const meta = airportMeta[f.from] || { parking: '—', drive: '—' };
       const fromName = airportNames[f.from] || f.from;
       const toName = destNames[f.to] || f.to;
-      const route = f.via ? `${fromName} → ${destNames[f.via] || f.via} (через ${destNames[f.to]})` : `${fromName} → ${toName}`;
+      const route = f.via ? `${fromName} → ${toName} (через ${destNames[f.via] || f.via})` : `${fromName} → ${toName}`;
 
       const hacksHtml = f.hacks.map(h => {
         const labels = {
@@ -1239,28 +1243,6 @@
         : '';
 
       const cardClass = f.forecast.cssClass === 'forecast-urgent' ? 'urgent' : f.forecast.cssClass === 'forecast-buy' ? 'balance' : '';
-
-      // ===== НОВОЕ: БЛОК ВРЕМЕНИ ВЫЛЕТА =====
-      const timeBlockHtml = `
-        <div class="flight-time-block">
-          <div class="time-point">
-            <div class="time-value">${f.depTime}</div>
-            <div class="time-label">Вылет</div>
-            <div class="time-airport">${fromName}</div>
-          </div>
-          <div class="time-arrow">
-            <div class="duration">⏱️ ${f.duration}</div>
-            <div class="line"></div>
-            <div class="stops-info">${f.stops}</div>
-          </div>
-          <div class="time-point">
-            <div class="time-value">${f.arrTime}</div>
-            <div class="time-label">Прилёт</div>
-            <div class="time-airport">${toName}</div>
-          </div>
-          ${f.bestOutDate ? `<div class="best-time-badge">Лучшее время: ${f.bestOutDate.time}</div>` : ''}
-        </div>
-      `;
 
       let datesText = '';
       if (flexEnabled && f.bestOutDate) {
@@ -1286,7 +1268,7 @@
           <span class="flight-route">${route}</span>
           <span class="flight-price">~${f.total} CHF</span>
         </div>
-        ${timeBlockHtml}
+        ${renderTimeBlock(f)}
         <div class="flight-details">
           <strong>Авиакомпания:</strong> ${f.airline} | <strong>Рейс:</strong> ${f.flight} | <strong>Класс:</strong> ${f.class}<br>
           ${datesText}<br>
@@ -1308,7 +1290,7 @@
     document.getElementById('avgPrice').textContent = `${Math.round(totals.reduce((a,b)=>a+b,0)/totals.length)} CHF`;
 
     const cheapest = flights[0];
-    const balance = flights.filter(f => !f.hacks.includes('split')).reduce((a,b) => a.total < b.total ? a : b);
+    const balance = flights.filter(f => !f.hacks.includes('split')).reduce((a,b) => a.total < b.total ? a : b, flights[0]);
 
     const chFrom = airportNames[cheapest.from] || cheapest.from;
     const chTo = destNames[cheapest.to] || cheapest.to;
