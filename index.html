@@ -86,13 +86,14 @@
     cursor: pointer;
     border-bottom: 1px solid #f0f3f6;
     font-size: 13px;
+    transition: background 0.15s;
   }
   .autocomplete-item:hover { background: #f0f4ff; }
   .autocomplete-item:last-child { border-bottom: none; }
   .autocomplete-item .city-name { font-weight: 600; color: #2c3e50; }
   .autocomplete-item .city-info { font-size: 11px; color: #7f8c8d; margin-top: 2px; }
 
-  /* ===== НОВЫЙ ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ВЫЛЕТА ===== */
+  /* ===== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ВЫЛЕТА ===== */
   .departure-mode-block {
     background: linear-gradient(135deg, #fff9c4 0%, #ffe0b2 100%);
     border-radius: 12px;
@@ -360,6 +361,7 @@
     color: #7f8c8d;
     text-transform: uppercase;
     margin-top: 4px;
+    letter-spacing: 0.5px;
   }
   .time-point .time-airport {
     font-size: 11px;
@@ -618,13 +620,13 @@
 
   <div class="card">
     <h1>✈️ Travel Hacker AI <span class="badge">v8.7 — режимы вылета</span></h1>
-    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Режимы: ранние / дневные / вечерние рейсы</div>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • Режимы: ранние / дневные / вечерние рейсы</div>
 
     <div class="preferences-note">
       💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
     </div>
 
-    <!-- ===== НОВЫЙ БЛОК: РЕЖИМЫ ВЫЛЕТА ===== -->
+    <!-- ===== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ВЫЛЕТА ===== -->
     <div class="departure-mode-block">
       <label>⏰ Режим вылета (время суток)</label>
       <div class="mode-switcher">
@@ -729,22 +731,22 @@
       <div class="airports-grid" id="airportsGrid">
         <label class="airport-chip active"><input type="checkbox" value="ZRH" checked> Цюрих <span class="drive-time">1ч 15мин</span></label>
         <label class="airport-chip active"><input type="checkbox" value="BSL" checked> Базель <span class="drive-time">1ч 15мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="GVA"> Женева <span class="drive-time">2ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="FDH"> Фридрихсхафен <span class="drive-time">1ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="FKB"> Карлсруэ <span class="drive-time">2ч</span></label>
-        <label class="airport-chip"><input type="checkbox" value="SXB"> Страсбург <span class="drive-time">2ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="STR"> Штутгарт <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="GVA" checked> Женева <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="FDH" checked> Фридрихсхафен <span class="drive-time">1ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="FKB" checked> Карлсруэ <span class="drive-time">2ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="SXB" checked> Страсбург <span class="drive-time">2ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="STR" checked> Штутгарт <span class="drive-time">2ч 30мин</span></label>
         <label class="airport-chip active"><input type="checkbox" value="MXP" checked> Милан Мальпенса <span class="drive-time">3ч</span></label>
         <label class="airport-chip active"><input type="checkbox" value="BGY" checked> Милан Бергамо <span class="drive-time">3ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="FMM"> Мемминген <span class="drive-time">3ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="LYS"> Лион <span class="drive-time">3ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="INN"> Инсбрук <span class="drive-time">3ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="NUE"> Нюрнберг <span class="drive-time">4ч</span></label>
-        <label class="airport-chip"><input type="checkbox" value="MUC"> Мюнхен <span class="drive-time">4ч</span></label>
-        <label class="airport-chip"><input type="checkbox" value="BLQ"> Болонья <span class="drive-time">4ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="FRA"> Франкфурт <span class="drive-time">4ч 30мин</span></label>
-        <label class="airport-chip"><input type="checkbox" value="VCE"> Венеция <span class="drive-time">5ч</span></label>
-        <label class="airport-chip"><input type="checkbox" value="NCE"> Ницца <span class="drive-time">5ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="FMM" checked> Мемминген <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="LYS" checked> Лион <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="INN" checked> Инсбрук <span class="drive-time">3ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="NUE" checked> Нюрнберг <span class="drive-time">4ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="MUC" checked> Мюнхен <span class="drive-time">4ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="BLQ" checked> Болонья <span class="drive-time">4ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="FRA" checked> Франкфурт <span class="drive-time">4ч 30мин</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="VCE" checked> Венеция <span class="drive-time">5ч</span></label>
+        <label class="airport-chip active"><input type="checkbox" value="NCE" checked> Ницца <span class="drive-time">5ч</span></label>
       </div>
     </div>
 
@@ -819,9 +821,8 @@
   const STORAGE_KEY = 'travelHackerPrefs_v87';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
   let selectedDestination = null;
-  let departureMode = 'morning'; // 🌅 morning / ☀️ day / 🌙 evening
+  let departureMode = 'morning';
 
-  // ===== БАЗА НАПРАВЛЕНИЙ =====
   const destinations = [
     { keywords: ['тенерифе', 'tenerife', 'tfs', 'канары'], code: 'TFS', name: 'Тенерифе Южный', country: 'Испания', basePrice: 45, baseDuration: 270, airlines: ['Wizz Air', 'Ryanair', 'EasyJet'], visa: 'schengen' },
     { keywords: ['пальма', 'майорка', 'palma', 'pmi'], code: 'PMI', name: 'Пальма-де-Майорка', country: 'Испания', basePrice: 50, baseDuration: 170, airlines: ['EasyJet', 'Ryanair', 'Eurowings'], visa: 'schengen' },
@@ -889,7 +890,6 @@
     NCE: { parking: '~85 CHF/нед', drive: '~5ч' }
   };
 
-  // ===== ПЕРЕКЛЮЧЕНИЕ РЕЖИМА ВЫЛЕТА =====
   function setDepartureMode(mode) {
     departureMode = mode;
     document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -905,7 +905,6 @@
     savePreferences();
   }
 
-  // ===== АВТОДОПОЛНЕНИЕ =====
   const destInput = document.getElementById('destination');
   const autocompleteList = document.getElementById('autocompleteList');
   const selectedDestDiv = document.getElementById('selectedDest');
@@ -1087,27 +1086,24 @@
     return bags * 70;
   }
 
-  // ===== НОВОЕ: ГЕНЕРАЦИЯ ВРЕМЕНИ С УЧЁТОМ РЕЖИМА =====
   function generateFlightTime(mode, seed, dateOffset) {
-    // Определяем диапазон времени в минутах от полуночи
-    let minMinutes, maxMinutes;
-    let priceModifier = 1;
+    let minMinutes, maxMinutes, priceModifier;
     
     switch(mode) {
       case 'morning':
-        minMinutes = 300;  // 05:00
-        maxMinutes = 720;  // 12:00
-        priceModifier = 0.95; // дешевле
+        minMinutes = 300;
+        maxMinutes = 720;
+        priceModifier = 0.95;
         break;
       case 'day':
-        minMinutes = 720;  // 12:00
-        maxMinutes = 1320; // 22:00
-        priceModifier = 1.0; // средняя цена
+        minMinutes = 720;
+        maxMinutes = 1320;
+        priceModifier = 1.0;
         break;
       case 'evening':
-        minMinutes = 1320; // 22:00
-        maxMinutes = 1440; // 24:00 (полночь)
-        priceModifier = 0.88; // самые дешёвые
+        minMinutes = 1320;
+        maxMinutes = 1440;
+        priceModifier = 0.88;
         break;
       default:
         minMinutes = 300;
@@ -1115,12 +1111,9 @@
         priceModifier = 0.95;
     }
     
-    // Генерируем время в диапазоне с учётом seed
     const range = maxMinutes - minMinutes;
-    const variation = Math.sin(seed * 7 + dateOffset * 13) * 0.5 + 0.5; // 0..1
+    const variation = Math.sin(seed * 7 + dateOffset * 13) * 0.5 + 0.5;
     let minutes = minMinutes + Math.round(variation * range);
-    
-    // Небольшой шум для реалистичности
     const noise = Math.round(Math.sin(seed + dateOffset * 3) * 15);
     minutes += noise;
     
@@ -1469,7 +1462,6 @@
       return;
     }
 
-    // Модификатор цены в зависимости от режима вылета
     const modePriceModifier = departureMode === 'morning' ? 0.95 : 
                               departureMode === 'day' ? 1.0 : 0.88;
 
@@ -1540,7 +1532,6 @@
       const baseBackPrice = calculateTotalPrice(f.priceBase + 5);
       const baggageTotal = calculateBaggagePrice();
 
-      // Используем НОВУЮ функцию с учётом режима
       const timeInfo = generateFlightTime(departureMode, seed, 0);
       const depTime = timeInfo.time;
       const duration = generateDuration(f.baseDuration, seed);
