@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel Hacker AI v8.6 — исправлен баг направления</title>
+<title>Travel Hacker AI v8.7 — режимы вылета</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -86,12 +86,70 @@
     cursor: pointer;
     border-bottom: 1px solid #f0f3f6;
     font-size: 13px;
-    transition: background 0.15s;
   }
   .autocomplete-item:hover { background: #f0f4ff; }
   .autocomplete-item:last-child { border-bottom: none; }
   .autocomplete-item .city-name { font-weight: 600; color: #2c3e50; }
   .autocomplete-item .city-info { font-size: 11px; color: #7f8c8d; margin-top: 2px; }
+
+  /* ===== НОВЫЙ ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ВЫЛЕТА ===== */
+  .departure-mode-block {
+    background: linear-gradient(135deg, #fff9c4 0%, #ffe0b2 100%);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 2px solid #fbc02d;
+  }
+  .departure-mode-block > label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5d4037;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .mode-switcher {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid #e0e6ed;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .mode-btn:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+  }
+  .mode-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+  .mode-btn .mode-emoji { font-size: 24px; }
+  .mode-btn .mode-title { font-weight: 700; font-size: 14px; }
+  .mode-btn .mode-desc { font-size: 11px; opacity: 0.8; }
+  .mode-btn.active .mode-desc { opacity: 1; }
+  .mode-hint {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #5d4037;
+    border-left: 3px solid #fbc02d;
+  }
 
   .passengers-block {
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf3 100%);
@@ -302,7 +360,6 @@
     color: #7f8c8d;
     text-transform: uppercase;
     margin-top: 4px;
-    letter-spacing: 0.5px;
   }
   .time-point .time-airport {
     font-size: 11px;
@@ -347,6 +404,18 @@
     color: #7f8c8d;
     text-align: center;
   }
+
+  .mode-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .mode-morning { background: #fff3e0; color: #e65100; }
+  .mode-day { background: #e3f2fd; color: #1565c0; }
+  .mode-evening { background: #ede7f6; color: #4527a0; }
 
   .warning-badge {
     display: inline-block;
@@ -537,6 +606,10 @@
     h1 { font-size: 22px; }
     .flex-calendar-grid { grid-template-columns: repeat(4, 1fr); }
     .time-block { flex-direction: column; }
+    .mode-btn { min-width: 100px; padding: 10px; }
+    .mode-btn .mode-emoji { font-size: 20px; }
+    .mode-btn .mode-title { font-size: 12px; }
+    .mode-btn .mode-desc { font-size: 10px; }
   }
 </style>
 </head>
@@ -544,17 +617,42 @@
 <div class="container">
 
   <div class="card">
-    <h1>✈️ Travel Hacker AI <span class="badge">v8.6 — баг направления исправлен</span></h1>
-    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Радиус 5 часов от Туна • 35+ направлений</div>
+    <h1>✈️ Travel Hacker AI <span class="badge">v8.7 — режимы вылета</span></h1>
+    <div class="subtitle">Поиск авиабилетов со скидками до 70% • Режимы: ранние / дневные / вечерние рейсы</div>
 
     <div class="preferences-note">
       💡 <strong>Ваши предпочтения:</strong> Тун (Швейцария) → аэропорты в радиусе 5 часов, гражданство Украина, приоритет — минимальная цена.
     </div>
 
+    <!-- ===== НОВЫЙ БЛОК: РЕЖИМЫ ВЫЛЕТА ===== -->
+    <div class="departure-mode-block">
+      <label>⏰ Режим вылета (время суток)</label>
+      <div class="mode-switcher">
+        <div class="mode-btn active" data-mode="morning" onclick="setDepartureMode('morning')">
+          <span class="mode-emoji">🌅</span>
+          <span class="mode-title">Ранние рейсы</span>
+          <span class="mode-desc">до 12:00 • дешевле</span>
+        </div>
+        <div class="mode-btn" data-mode="day" onclick="setDepartureMode('day')">
+          <span class="mode-emoji">☀️</span>
+          <span class="mode-title">Дневные рейсы</span>
+          <span class="mode-desc">12:00–22:00 • удобно</span>
+        </div>
+        <div class="mode-btn" data-mode="evening" onclick="setDepartureMode('evening')">
+          <span class="mode-emoji">🌙</span>
+          <span class="mode-title">Вечерние рейсы</span>
+          <span class="mode-desc">после 22:00 • самые дешёвые</span>
+        </div>
+      </div>
+      <div class="mode-hint" id="modeHint">
+        💡 <strong>Режим «Ранние рейсы»:</strong> вылеты до 12:00. Обычно дешевле на 10-15%, но требуют выезда из Туна рано утром (в 4-5 утра для дальних аэропортов).
+      </div>
+    </div>
+
     <div class="form-grid">
       <div class="form-group">
         <label>🛬 Куда</label>
-        <input type="text" id="destination" placeholder="Например: Барселона, Тбилиси, Варшава..." autocomplete="off">
+        <input type="text" id="destination" placeholder="Например: Барселона, Тбилиси..." autocomplete="off">
         <div class="autocomplete-list" id="autocompleteList"></div>
       </div>
       <div class="form-group">
@@ -707,7 +805,7 @@
     </div>
     <div class="summary-item summary-hack">
       <h3>💡 СОВЕТ ХАКЕРА</h3>
-      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже. <strong>Обращайте внимание на время вылета: ранние рейсы (до 8:00) обычно дешевле, но требуют выезда из Туна за 3-4 часа!</strong></p>
+      <p id="summaryHack">Wizz Air из Карлсруэ, Меммингена или Штутгарта часто дешевле швейцарских вылетов, а парковка там стоит ~60-70 CHF/нед. Бронируйте парковку онлайн за 48 часов для скидки 15-20%. Для лоукостеров ВСЕГДА оплачивайте багаж онлайн — в аэропорту это в 2-3 раза дороже. <strong>Переключайте режимы вылета: утренние рейсы дешевле, но дневные удобнее для семьи с детьми!</strong></p>
     </div>
     <p style="font-size:11px; color:#888; margin-top:12px; border-top:1px solid #eee; padding-top:8px;">
       📅 <strong>ДАТА ПРОВЕРКИ ЦЕН:</strong> <span id="checkDate"></span><br>
@@ -718,9 +816,10 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'travelHackerPrefs_v86';
+  const STORAGE_KEY = 'travelHackerPrefs_v87';
   let passengers = { adults: 2, children: 1, infants: 0, childAge: 9 };
   let selectedDestination = null;
+  let departureMode = 'morning'; // 🌅 morning / ☀️ day / 🌙 evening
 
   // ===== БАЗА НАПРАВЛЕНИЙ =====
   const destinations = [
@@ -790,7 +889,23 @@
     NCE: { parking: '~85 CHF/нед', drive: '~5ч' }
   };
 
-  // ===== АВТОДОПОЛНЕНИЕ (ИСПРАВЛЕНО) =====
+  // ===== ПЕРЕКЛЮЧЕНИЕ РЕЖИМА ВЫЛЕТА =====
+  function setDepartureMode(mode) {
+    departureMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    
+    const hints = {
+      morning: '💡 <strong>Режим «Ранние рейсы»:</strong> вылеты до 12:00. Обычно дешевле на 10-15%, но требуют выезда из Туна рано утром (в 4-5 утра для дальних аэропортов).',
+      day: '💡 <strong>Режим «Дневные рейсы»:</strong> вылеты с 12:00 до 22:00. Удобно для семьи с детьми — не нужно вставать рано, можно спокойно собраться. Цены средние.',
+      evening: '💡 <strong>Режим «Вечерние рейсы»:</strong> вылеты после 22:00. Часто самые дешёвые (ночные рейсы), но прилёт глубокой ночью. Требует такси из аэропорта.'
+    };
+    document.getElementById('modeHint').innerHTML = hints[mode];
+    savePreferences();
+  }
+
+  // ===== АВТОДОПОЛНЕНИЕ =====
   const destInput = document.getElementById('destination');
   const autocompleteList = document.getElementById('autocompleteList');
   const selectedDestDiv = document.getElementById('selectedDest');
@@ -798,7 +913,6 @@
   destInput.addEventListener('input', function() {
     const query = this.value.toLowerCase().trim();
     
-    // 🔥 ИСПРАВЛЕНИЕ: сбрасываем selectedDestination при изменении текста
     if (selectedDestination && selectedDestination.name !== this.value) {
       selectedDestination = null;
       selectedDestDiv.classList.remove('show');
@@ -859,38 +973,19 @@
     savePreferences();
   }
 
-  // 🔥 УЛУЧШЕННАЯ функция поиска направления
   function findDestination(query) {
     if (!query) return null;
     const q = query.toLowerCase().trim();
-    
-    // 1. Точное совпадение по коду (BCN, TFS, WAW и т.д.)
     const byCode = destinations.find(d => d.code.toLowerCase() === q);
     if (byCode) return byCode;
-    
-    // 2. Точное совпадение по названию
     const byExactName = destinations.find(d => d.name.toLowerCase() === q);
     if (byExactName) return byExactName;
-    
-    // 3. Совпадение по ключевым словам (точное)
-    const byKeyword = destinations.find(d => 
-      d.keywords.some(k => k === q)
-    );
+    const byKeyword = destinations.find(d => d.keywords.some(k => k === q));
     if (byKeyword) return byKeyword;
-    
-    // 4. Вхождение подстроки в ключевые слова
-    const byKeywordContains = destinations.find(d => 
-      d.keywords.some(k => k.includes(q) || q.includes(k))
-    );
+    const byKeywordContains = destinations.find(d => d.keywords.some(k => k.includes(q) || q.includes(k)));
     if (byKeywordContains) return byKeywordContains;
-    
-    // 5. Вхождение подстроки в название или страну
-    const byNameContains = destinations.find(d => 
-      d.name.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)
-    );
-    if (byNameContains) return byNameContains;
-    
-    return null;
+    const byNameContains = destinations.find(d => d.name.toLowerCase().includes(q) || d.country.toLowerCase().includes(q));
+    return byNameContains;
   }
 
   function changeCount(type, delta) {
@@ -925,6 +1020,7 @@
       dateOut: document.getElementById('dateOut').value,
       dateBack: document.getElementById('dateBack').value,
       baggage: document.getElementById('baggage').value,
+      departureMode: departureMode,
       flexDates: document.getElementById('flexDates').checked,
       selfTransfer: document.getElementById('selfTransfer').checked,
       mistakeFares: document.getElementById('mistakeFares').checked,
@@ -951,6 +1047,10 @@
       if (prefs.dateOut) document.getElementById('dateOut').value = prefs.dateOut;
       if (prefs.dateBack) document.getElementById('dateBack').value = prefs.dateBack;
       if (prefs.baggage) document.getElementById('baggage').value = prefs.baggage;
+      if (prefs.departureMode) {
+        departureMode = prefs.departureMode;
+        setDepartureMode(departureMode);
+      }
       document.getElementById('flexDates').checked = prefs.flexDates !== false;
       document.getElementById('selfTransfer').checked = prefs.selfTransfer !== false;
       document.getElementById('mistakeFares').checked = prefs.mistakeFares !== false;
@@ -987,14 +1087,53 @@
     return bags * 70;
   }
 
-  function generateFlightTime(baseTime, seed, dateOffset) {
-    const variation = Math.sin(seed + dateOffset * 3) * 60;
-    let minutes = baseTime + Math.round(variation);
+  // ===== НОВОЕ: ГЕНЕРАЦИЯ ВРЕМЕНИ С УЧЁТОМ РЕЖИМА =====
+  function generateFlightTime(mode, seed, dateOffset) {
+    // Определяем диапазон времени в минутах от полуночи
+    let minMinutes, maxMinutes;
+    let priceModifier = 1;
+    
+    switch(mode) {
+      case 'morning':
+        minMinutes = 300;  // 05:00
+        maxMinutes = 720;  // 12:00
+        priceModifier = 0.95; // дешевле
+        break;
+      case 'day':
+        minMinutes = 720;  // 12:00
+        maxMinutes = 1320; // 22:00
+        priceModifier = 1.0; // средняя цена
+        break;
+      case 'evening':
+        minMinutes = 1320; // 22:00
+        maxMinutes = 1440; // 24:00 (полночь)
+        priceModifier = 0.88; // самые дешёвые
+        break;
+      default:
+        minMinutes = 300;
+        maxMinutes = 720;
+        priceModifier = 0.95;
+    }
+    
+    // Генерируем время в диапазоне с учётом seed
+    const range = maxMinutes - minMinutes;
+    const variation = Math.sin(seed * 7 + dateOffset * 13) * 0.5 + 0.5; // 0..1
+    let minutes = minMinutes + Math.round(variation * range);
+    
+    // Небольшой шум для реалистичности
+    const noise = Math.round(Math.sin(seed + dateOffset * 3) * 15);
+    minutes += noise;
+    
     if (minutes < 0) minutes += 1440;
     if (minutes >= 1440) minutes -= 1440;
+    
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    
+    return {
+      time: `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`,
+      priceModifier: priceModifier
+    };
   }
 
   function generateDuration(baseMinutes, seed) {
@@ -1069,14 +1208,14 @@
       const d = addDays(baseDate, i);
       const daysToDep = Math.max(1, Math.round((d - today) / (1000 * 60 * 60 * 24)));
       const price = generatePriceForDate(basePrice, d, seed + i * 17, daysToDep);
-      const time = generateFlightTime(360 + (i * 30), seed, i);
+      const timeInfo = generateFlightTime(departureMode, seed + i, i);
       dates.push({
         date: d,
         dateStr: formatDateISO(d),
         displayDate: formatDate(d),
         dayName: dayNames[d.getDay()],
         price: price,
-        time: time,
+        time: timeInfo.time,
         offset: i
       });
     }
@@ -1253,17 +1392,21 @@
 
   function renderTimeBlock(f, destName) {
     const fromName = airportNames[f.from] || f.from;
+    const modeEmoji = departureMode === 'morning' ? '🌅' : departureMode === 'day' ? '☀️' : '🌙';
+    const modeClass = `mode-${departureMode}`;
+    const modeLabel = departureMode === 'morning' ? 'Ранний рейс' : departureMode === 'day' ? 'Дневной рейс' : 'Вечерний рейс';
+    
     return `
       <div class="time-block">
         <div class="time-point">
           <div class="time-value">${f.depTime}</div>
-          <div class="time-label">Вылет</div>
+          <div class="time-label">Вылет ${modeEmoji}</div>
           <div class="time-airport">${fromName}</div>
         </div>
         <div class="time-arrow">
           <div class="duration">⏱️ ${f.duration}</div>
           <div class="line"></div>
-          <div class="stops-info">${f.stops}</div>
+          <div class="stops-info">${f.stops} • <span class="mode-badge ${modeClass}">${modeLabel}</span></div>
         </div>
         <div class="time-point">
           <div class="time-value">${f.arrTime}</div>
@@ -1291,10 +1434,7 @@
     
     const destInputValue = document.getElementById('destination').value;
     
-    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: всегда перепроверяем направление
     let dest = null;
-    
-    // Сначала проверяем, что selectedDestination соответствует введённому тексту
     if (selectedDestination) {
       const matches = selectedDestination.name === destInputValue ||
                       selectedDestination.code.toLowerCase() === destInputValue.toLowerCase().trim() ||
@@ -1303,20 +1443,15 @@
         selectedDestination = null;
       }
     }
-    
-    // Если selectedDestination есть и совпадает — используем его
     if (selectedDestination) {
       dest = selectedDestination;
     } else {
-      // Иначе ищем по введённому тексту
       dest = findDestination(destInputValue);
-      if (dest) {
-        selectDestination(dest);
-      }
+      if (dest) selectDestination(dest);
     }
     
     if (!dest) {
-      alert(`❌ Направление "${destInputValue}" не найдено.\n\nПопробуйте:\n• Выбрать из списка подсказок (начните вводить название)\n• Использовать английское название (Barcelona, Warsaw, Tbilisi)\n• Использовать код аэропорта (BCN, WAW, TBS)`);
+      alert(`❌ Направление "${destInputValue}" не найдено.\n\nПопробуйте:\n• Выбрать из списка подсказок\n• Использовать английское название\n• Использовать код аэропорта`);
       return;
     }
 
@@ -1334,6 +1469,10 @@
       return;
     }
 
+    // Модификатор цены в зависимости от режима вылета
+    const modePriceModifier = departureMode === 'morning' ? 0.95 : 
+                              departureMode === 'day' ? 1.0 : 0.88;
+
     let allFlights = [];
     selectedAirports.forEach((fromCode, idx) => {
       const mainAirline = dest.airlines[idx % dest.airlines.length];
@@ -1348,7 +1487,7 @@
       };
       
       const modifier = airportPriceModifier[fromCode] || 1.0;
-      const basePrice = Math.round(dest.basePrice * modifier);
+      const basePrice = Math.round(dest.basePrice * modifier * modePriceModifier);
       
       const hacks = [];
       if (isLowcost) hacks.push('lowcost');
@@ -1401,7 +1540,9 @@
       const baseBackPrice = calculateTotalPrice(f.priceBase + 5);
       const baggageTotal = calculateBaggagePrice();
 
-      const depTime = generateFlightTime(f.baseDepTime, seed, 0);
+      // Используем НОВУЮ функцию с учётом режима
+      const timeInfo = generateFlightTime(departureMode, seed, 0);
+      const depTime = timeInfo.time;
       const duration = generateDuration(f.baseDuration, seed);
       const arrTime = calculateArrivalTime(depTime, duration);
 
@@ -1576,22 +1717,24 @@
 
     const chFrom = airportNames[cheapest.from] || cheapest.from;
     const balFrom = airportNames[balance.from] || balance.from;
+    const modeEmoji = departureMode === 'morning' ? '🌅' : departureMode === 'day' ? '☀️' : '🌙';
+    const modeName = departureMode === 'morning' ? 'ранние' : departureMode === 'day' ? 'дневные' : 'вечерние';
 
-    let cheapText = `<strong>${chFrom} → ${cheapest.destName}</strong> на ${cheapest.airline} — ~${cheapest.total} CHF за ${passengers.adults + passengers.children + passengers.infants} чел. Вылет в ${cheapest.depTime}, прилёт в ${cheapest.arrTime}.`;
+    let cheapText = `${modeEmoji} <strong>${chFrom} → ${cheapest.destName}</strong> на ${cheapest.airline} — ~${cheapest.total} CHF за ${passengers.adults + passengers.children + passengers.infants} чел. Вылет в ${cheapest.depTime} (${modeName} рейс), прилёт в ${cheapest.arrTime}.`;
     if (flexEnabled && cheapest.totalSaving > 0) {
       cheapText += ` (включая экономию ${cheapest.totalSaving} CHF от гибкости дат).`;
     }
     cheapText += ` Причина: минимальная возможная цена${cheapest.hacks.includes('split') ? ', но с риском self-transfer' : ''}.`;
 
     document.getElementById('summaryCheapest').innerHTML = cheapText;
-    document.getElementById('summaryBalance').innerHTML = `<strong>${balFrom} → ${balance.destName}</strong> на ${balance.airline} — ~${balance.total} CHF. Вылет в ${balance.depTime}, прилёт в ${balance.arrTime}. Причина: прямой рейс, удобная парковка (${airportMeta[balance.from]?.parking}), дорога из Туна ~${airportMeta[balance.from]?.drive}.`;
+    document.getElementById('summaryBalance').innerHTML = `${modeEmoji} <strong>${balFrom} → ${balance.destName}</strong> на ${balance.airline} — ~${balance.total} CHF. Вылет в ${balance.depTime} (${modeName} рейс), прилёт в ${balance.arrTime}. Причина: прямой рейс, удобная парковка (${airportMeta[balance.from]?.parking}), дорога из Туна ~${airportMeta[balance.from]?.drive}.`;
 
     document.getElementById('checkDate').textContent = new Date().toLocaleString('ru-RU');
     document.getElementById('summaryCard').style.display = 'block';
   }
 
   function exportCSV() {
-    const rows = [['Маршрут','Вылет','Прилёт','Продолжительность','Дата','Авиакомпания','Рейс','Итого','Пересадки','Багаж','Парковка','Дорога из Туна']];
+    const rows = [['Маршрут','Вылет','Прилёт','Продолжительность','Режим','Дата','Авиакомпания','Рейс','Итого','Пересадки','Багаж','Парковка','Дорога из Туна']];
     document.querySelectorAll('.flight-card').forEach(card => {
       const text = card.innerText.replace(/\n/g,' | ');
       rows.push([text]);
